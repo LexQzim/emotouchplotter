@@ -1,5 +1,5 @@
 # emotouchplotter
-This small python project to evaluate and plot csv data of emotouch
+This small python project to evaluate and plot csv data of emotouch.
 
 # How to use?
 This is a short introduction in this project
