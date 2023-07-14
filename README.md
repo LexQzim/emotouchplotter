@@ -23,3 +23,6 @@ pip install --requirements.txt
 ```
 python main.py
 ```
+
+# Obsolete scripts
+You can find some old scripts within the directory obsolete scripts. This is just for history because there are not functional. But if you want to see how it starts then check them out.
