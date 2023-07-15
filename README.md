@@ -23,21 +23,45 @@ This is a short introduction in this project
 4. Update filenames in main.py
 
 ## Install and run<a name="install-and-run"></a>
-1. Create a virtual environment within your project folder with
+### 1. 
+Create a virtual environment within your project folder with
 ```
 python -m venv virtualEnv
 ```
-2. Activate virtual environment
+If you get an error then try
 ```
-.\venv\Scripts\activate
+py -m venv virtualEnv
 ```
-3. Install all necessary packages with 
+
+### 2. 
+Activate virtual environment
+```
+.\virtualEnv\Scripts\activate
+```
+
+If you get an error which says that it isn't allowed to run a script. In that case you need to update your execution policy in windows.
+Type the following command into your powershell. To start powershell just press windows key and type **powershell** into the searchbar. Then you will get a suggestion to **open powershell as admin**. Do it. You need administration right to execute the following command:
+```
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+For more details about this change look here:
+- [englisch](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-7.3)
+- [german](https://learn.microsoft.com/de-de/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-7.3)
+
+### 3. 
+Install all necessary packages with 
 ```
 pip install -r requirements.txt
 ```
-4. Start programm with
+
+### 4. 
+Start programm with
 ```
 python main.py
+```
+If you get an error then try
+```
+py main.py
 ```
 
 This is only for the first start. Later you just need to activate the virtual environment and can directly start the script.
@@ -49,22 +73,31 @@ You can find some old scripts within the directory obsolete scripts. This is jus
 Die folgende Anleitung wird der einfachsheitshalber auf deutsch formuliert.
 
 ## Installation von Python<a name="installation-von-python"></a>
-Um das Skript ausführen zu können wird auf dem PC Python benötigt. Eine Installationsdatei für Windows lässt sich hier (https://www.python.org/downloads/) runterladen.
-Achtet hier darauf, dass hier mindestens die Python Version 3.10 verwendet wird. 
-Führt anschließend die Installation aus und achtet hier darauf, dass der Hacken bei der Pfadeinstellung gesetzt ist.
-> Beispiel:
-> ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/d5e645f2-fd25-4146-9f87-797b015708b0)
+Um das Skript ausführen zu können wird auf dem PC Python benötigt. Es gibt mehrere Möglichkeiten Python auf dem Windows System zu installieren. Die einfachste die die Installation aus dem Windows Store. 
 
-Dieser Hacken bedeutet, dass Python in die Umgebungsvariablen integriert wird und somit von der Konsole aus überall auf dem PC genutzt werden kann. 
-
-Alternativ kannst du dir auch Python direkt aus dem Windows Store laden. Wenn du einfach `python` in die Eingabeaufforderung eingibst, dann öffnet sich automatisch der Store und schlägt dir eine Python Version vor.
-
-## Python auf dem eigenen System testen<a name="python-auf-dem-system-testen"></a>
-Nach Abschluss der Installation kann mittels der Konsole (Eingabeaufforderung) geprüft werden, ob Python richtig installier wurde. 
-Öffne dazu zunächst die Konsole. Im einfachsten Fall drückst du die Windowstaste und gibst dann die Suche "cmd" ein und wählst dann die "Eingabeaufforderung" aus.
+### Installationsmöglichkeit 1
+Öffne die **Eingabeaufforderung** in Windows. Dazu drückst du die Windowstaste und gibt in die Suche `cmd` ein. Dann wird die die Eingabeaufforderung als Option angezeigt. 
 
 > Beispiel:
 > ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/4ef317fc-0bd6-402a-864b-e9cbd1e9e108)
+
+Nun gibst du hier einfach `python` ein. Darauf sollte sich der Windows Store öffnen und dir direkt ein passende Pythonversion vorschlagen. Führe nun die Installation aus. 
+
+### Installationsmöglichkeit 2
+Eine Installationsdatei für Windows lässt sich direkt online (https://www.python.org/downloads/) runterladen.
+Achtet hier darauf, dass hier mindestens die Python Version 3.10 verwendet wird. 
+Führt anschließend die Installation aus und achtet hier darauf, dass der Hacken bei der Pfadeinstellung gesetzt ist.
+
+> Beispiel:
+> ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/d5e645f2-fd25-4146-9f87-797b015708b0)
+
+Dieser Hacken bedeutet, dass Python in die Umgebungsvariablen integriert wird und somit von der Konsole aus überall auf dem PC genutzt werden kann.
+Damit du aber Python ohne Probleme nutzen kannst, musst in den Windowseinstellung noch eine Option deaktiveren. Ich empfehle dazu den ersten Lösungsvorschlag aus diesem [Beitrag](https://stackoverflow.com/questions/58754860/cmd-opens-windows-store-when-i-type-python) zu übernehmen.
+
+## Python auf dem eigenen System testen<a name="python-auf-dem-system-testen"></a>
+Nach Abschluss der Installation kann mittels der Konsole (Eingabeaufforderung) geprüft werden, ob Python richtig installiert wurde. 
+Öffne dazu zunächst die Konsole. Im einfachsten Fall drückst du die Windowstaste und gibst dann die Suche **cmd** ein und wählst dann die **Eingabeaufforderung** aus.
+
 
 Nun gibst du folgende Befehle in die Konsole ein:
 ```
@@ -85,12 +118,13 @@ pip ist ein kleiner Helfer, worüber leicht neue Pakete in Python installiert we
 ## Installation und Einrichtung der Entwicklungsumgebung VScode<a name="installation-vscode"></a>
 Es handelt sich ja hierbei um blanken Quellcode. Um diesen vernünftig lesen und bearbeiten zu können empfiehlt es sich eine Entwicklungsumgebung einzurichten. Ich empfehle hier [VsCode](https://code.visualstudio.com/). Es handelt sich dabei um einen Texteditor, welche durch Erweiterungen für jede Programmiersprache, aber auch für die Bearbeitung von verschiedenen Datein, wie .csv und .json, individuell eingerichtet und angepasst werden kann. Gleichzeitig ist der kostenlos und für alle nutzbar. 
 
-Starte den Editor nach der erfolgreichen Installation. Klicke in der unteren linken Ecke das Zahnradsymbol an und wähle Erweiterungen (Extensions) aus (Tastenkombination: Strg + Shift + X). Gib dann in die Suche Python ein und installiere die erste vorgeschlagene Erweiterung von Microsoft.
+Starte den Editor nach der erfolgreichen Installation. Klicke in der unteren linken Ecke das Zahnradsymbol an und wähle **Erweiterungen** (Extensions) aus (Tastenkombination: *Strg + Shift + X*). Gib dann in die Suche **Python** ein und installiere die erste vorgeschlagene Erweiterung von Microsoft.
 
 > Beispiel:
 > ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/f9ea91cc-b64d-4a51-b730-5dce8012bf6d)
 
-Du kannst nun im Editor testen, ob du von hier aus Python ausführen kannst. Führe Die Tastenkombination Strg + Shift + Ö aus und es sollte sich innerhalb des Editors eine Konsole öffnen. Gib auch hier wieder `python --version` ein. Du solltest auch hier wieder die Versionsnummer von Python angezeigt bekommen.
+Du kannst nun im Editor testen, ob du von hier aus Python ausführen kannst. Führe Die Tastenkombination *Strg + Shift + Ö* aus und es sollte sich innerhalb des Editors eine Konsole öffnen. Gib auch hier wieder `python --version` ein. Du solltest auch hier wieder die Versionsnummer von Python angezeigt bekommen.
+Solltest du hier einen Fehler erhalten, dass python nicht gefunden werden kann, dann versuche es mal mit dem Befehl `py --version`. 
 
 > Beispiel:
 > ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/34f9ab68-e999-410a-bb62-48227206fa82)
@@ -102,7 +136,7 @@ Lade dir nun das gesamte Projekt aus github runter. Im einfachsten Fall kannst d
 
 Entpacke das Archiv in einem Ordner deiner Wahl.
 
-Öffne nun VSCode, falls das noch nicht geschehen ist, und öffne hier den Projektorder. Dazu klickst du oben links auf "Datei" (File) und dann auf "Order öffnen..." (Open Folder...). Alternativ kannst du auch die Tastenkombination Strg + K und dann Strg + O verwenden. Wähle hier nun deinen Projektordner aus. 
+Öffne nun VSCode, falls das noch nicht geschehen ist, und öffne hier den Projektorder. Dazu klickst du oben links auf **Datei (File)** und dann auf **Order öffnen... (Open Folder...)**. Alternativ kannst du auch die Tastenkombination *Strg + K* und dann *Strg + O* verwenden. Wähle hier nun deinen Projektordner aus. 
 
 > Beispiel:
 > ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/c36d04cb-2736-420a-8ea7-8aa4a0c4aed2)
@@ -116,14 +150,15 @@ pip install virtualenv
 > ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/69e61431-9bfc-40f8-a202-dc7314dc9c84)
 
 Nun kannst du die Schritte unter dem Abschnitt [Install and run](#install-and-run) ausführen. 
-Beim ersten Start wird dir auch direkt der Order "data" mit dem Unterordner "origin" erzeugt. Darin legst du deine .csv Dateien ab. Nun musst du in der `main.py` die Dateinamen in der Zeile 7-10 entsprechend anpassen:
+Beim ersten Start wird dir auch direkt der Order **data** mit dem Unterordner **origin** erzeugt. Darin legst du deine .csv Dateien ab. Nun musst du in der `main.py` die Dateinamen in der Zeile 7-10 entsprechend anpassen:
 
 > Beispiel:
-> ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/2378e02e-a4b5-4e77-850c-c88d730a86e4)
+![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/2378e02e-a4b5-4e77-850c-c88d730a86e4)
 
-Übrigens. Du kannst das Script auch direkt über die Playtaste im Editor starte. Wenn du eine .py datei geöffnet hast, dann findest du das Symbol oben rechts. 
+#### Übrigens
+Du kannst das Script auch direkt über die Playtaste im Editor starte. Wenn du eine .py-Datei geöffnet hast, dann findest du das Symbol oben rechts.
 > Beispiel:
-> ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/9ef307b3-3aad-4fa4-b4b7-2d502c5abf84)
+![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/9ef307b3-3aad-4fa4-b4b7-2d502c5abf84)
 
 
 
