@@ -171,7 +171,6 @@ Achte darauf, dass du vor dem Herrunterladen der .csv-Dateien das Trennzeichen r
 > Beispiel:\
 > <img width="412" alt="Screenshot 2023-07-15 232159" src="https://github.com/LexQzim/emotouchplotter/assets/12845370/bf717feb-f89c-47a2-b3e2-0720d3f14dc8">
 
-
 Es gibt mehrere .py-Dateien. Die `main.py` ist dabei die Hauptdatei. Dort kannst du einstellen, welche Dateien wie bearbeitet werden soll. In den anderen Skripten befinden sich dann die weiteren Methoden. 
 
 Im oberen Teil der Datei stellst du die Grundeinstellungen ein, also welche Dateien sollen bearbeitet werden, wie sollen die Titel heißen und willst du eine Rauschkurve bzw. gelbe Signalfelder anzeigen. 
