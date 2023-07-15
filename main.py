@@ -3,22 +3,36 @@ import seabornDrawer as sd
 import os
 import sys
 
-
+# this is a list for four file sessions.
+# Update this list with your names
+# Keep in mind that you also need to update the list symbol_used, noise_versions and titles
+# all this lists need the same amount of elements
 fileNames = ["emoTouch_aus_einschleichend_MIT_aufforderung",
              "emoTouch_pretest_ein_ausschleichend_MIT_aufforderung",
              "emoTouch_pretest_ein_ausschleichend_ohne_aufforderung",
              "emoTouch_aus_einschleichend_ohne_neu"]
 
+# you can update this ending if it doesn't fits your needs
 timeline_data_ending = "_timeline_data_v1.6.1"
 session_metadata_ending = "_session_metadata_v1.6.1"
 version_1_7_ending = "_version1.7_(100_ms)"
 
+# This is a list of all soSci Survey Ids which you want to have in your results. 
+# You need to update this list for your needs
 needed_ids = [441, 442, 447, 453, 475, 477, 486, 487, 490, 494, 498, 503, 520, 524, 530, 531, 532, 534, 535, 538, 539, 545, 547, 550, 552, 560, 565, 569, 571, 574, 575, 576, 584, 585, 593, 595, 611, 615, 616, 621, 622, 635, 659, 664, 667, 676, 677,
               681, 688, 693, 700, 701, 705, 721, 726, 728, 746, 748, 756, 761, 766, 767, 770, 773, 780, 781, 785, 788, 798, 808, 811, 812, 814, 823, 839, 845, 847, 859, 866, 867, 868, 878, 880, 883, 887, 889, 890, 891, 893, 906, 907, 912, 913, 917, 931, 937, 948]
 
+# this is a very specific case which you are generaly don't need. 
+# Just type False for the amount of your used files
 symbol_used = [True, True, False, False]
+
+# there a three different types
+# noise version 0 = no noise
+# noise version 1 = fade in and then fade out
+# noise version 2 = fade out and then fade int
 noise_versions = [2,1,1,2]
 
+# update for each file type your plot titles
 titles = ["Versuch:  aus- und einschleichendes Rauschen mit Aufforderung, ID: ",
            "Versuch: ein- und ausschleichendes Rauschen mit Aufforderung, ID: ",
            "Versuch: ein- und ausschleichendes Rauschen ohne Aufforderung, ID: ",
@@ -50,7 +64,7 @@ if __name__ == "__main__":
 
     for i in range(4):
         # original data
-        call_operations_1(fileNames[i], delimiter="\t", title=titles[i], draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
+        call_operations_1(fileNames[i], delimiter="\t", title=titles[i], draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i], doExtra=True)
         # resampled data (100 ms)
         call_operations_1(fileNames[i]+version_1_7_ending, title=titles[i], delimiter=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
 
