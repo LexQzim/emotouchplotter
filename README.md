@@ -27,14 +27,20 @@ This is a short introduction in this project
 ```
 python -m venv virtualEnv
 ```
-2. Install all necessary packages with 
+2. Activate virtual environment
+```
+.\venv\Scripts\activate
+```
+3. Install all necessary packages with 
 ```
 pip install --requirements.txt
 ```
-3. Start programm with
+4. Start programm with
 ```
 python main.py
 ```
+
+This is only for the first start. Later you just need to activate the virtual environment and can directly start the script.
 
 # Obsolete scripts<a name="obsolete-scripts"></a>
 You can find some old scripts within the directory obsolete scripts. This is just for history because there are not functional. But if you want to see how it starts then check them out.
@@ -115,6 +121,9 @@ Beim ersten Start wird dir auch direkt der Order "data" mit dem Unterordner "ori
 > Beispiel:
 > ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/2378e02e-a4b5-4e77-850c-c88d730a86e4)
 
+Übrigens. Du kannst das Script auch direkt über die Playtaste im Editor starte. Wenn du eine .py datei geöffnet hast, dann findest du das Symbol oben rechts. 
+> Beispiel:
+> ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/9ef307b3-3aad-4fa4-b4b7-2d502c5abf84)
 
 
 
