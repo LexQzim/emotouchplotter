@@ -12,6 +12,7 @@ This small python project to evaluate and plot csv data of emotouch.
     - [Was ist pip?](#was-ist-pip)
   - [Installation und Einrichtung der Entwicklungsumgebung VScode](#installation-vscode)
   - [Runterladen und Einrichten vom Projekt](#einrichten-projekt)
+  - [Wie funktioniert das Script?](#einrichten-script)
 
 # How to use?<a name="how-to-use"></a>
 This is a short introduction in this project
@@ -150,15 +151,46 @@ pip install virtualenv
 > ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/69e61431-9bfc-40f8-a202-dc7314dc9c84)
 
 Nun kannst du die Schritte unter dem Abschnitt [Install and run](#install-and-run) ausführen. 
-Beim ersten Start wird dir auch direkt der Order **data** mit dem Unterordner **origin** erzeugt. Darin legst du deine .csv Dateien ab. Nun musst du in der `main.py` die Dateinamen in der Zeile 7-10 entsprechend anpassen:
+
+
+## Wie funktioniert das Script?<a name="einrichten-script"></a>
+Beim ersten Start wird dir auch direkt der Order **data** mit dem Unterordner **origin** erzeugt. Darin legst du deine .csv Dateien ab. Du findest diese Ordner nun in deinem Projektordner. Alternativ kannst du auch in VSCode einen Rechtsklick auf den Ordner machen und dann auf **Reveal in File Explorer** auswählen. Dann öffnet sich der Ordner und du kannst darin deine .csv Dateien ablegen. 
+
+> Beispiel: 
+>
+
+Für die Bearbeitung werden die Zeitreihen (timeline) und die Sitzungsdaten (session) Daten benötigt. Lade dir diese beiden Daten aus Emotouch herunter und füge diese in den Ordner **origin** ein. Achte bei den Dateinamen darauf, dass keine Leerzeichen enthalten sind. Ersetze alle Leerzeichen durch einen Unterstrich _
 
 > Beispiel:
-![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/2378e02e-a4b5-4e77-850c-c88d730a86e4)
+> aus: emoTouch_aus- einschleichend MIT aufforderung_version1.7 (100 ms)_object_metadata_v1.6.1
+> wird: emoTouch_aus_einschleichend_MIT_aufforderung_version1.7_(100_ms)_object_metadata_v1.6.1
+
+Achte darauf, dass du vor dem Herrunterladen der .csv-Dateien das Trennzeichen richtig einstellst. Ich würde hier das Semikolon empfehlen. Ansonsten müsstest du das sonst im Skript entsprechend anpassen.
+
+> Beispiel
+>
+
+Es gibt mehrere .py-Dateien. Die `main.py` ist dabei die Hauptdatei. Dort kannst du einstellen, welche Dateien wie bearbeitet werden soll. In den anderen Skripten befinden sich dann die weiteren Methoden. 
+
+Im oberen Teil der Datei stellst du die Grundeinstellungen ein, also welche Dateien sollen bearbeitet werden, wie sollen die Titel heißen und willst du eine Rauschkurve bzw. gelbe Signalfelder anzeigen. 
+
+> Beispiel:
+>
+
+Im unteren Teil (ab Zeile 67) dann wird das Skript ausgeführt. Hier wird drei mal die Methode `call_operations` ausgeführt. Mit einem **#** vor der Zeile kannst du alle unnötigen Zeilen auskommentieren bzw. wenn du es entfernst, dann wird die Zeile wieder aktiv. 
+In der Standardeinstellung werden erstmal nur alle Rohdaten verarbeitet. 
+
+> Beispiel:
+>
+
+Achte darauf, dass die Endungen der Dateinamen auch passend zu den spezifischen Endungen von emotouch passen. Die Dateinamen setzen sich nämlich immer aus 2 - 3 Elementen zusammen.
+
+> (Sitzungname)_(Version_1.7)_(Typ_der_Datei)
+
+Der mittlere Teil kommt nur in den resampelten Dateien vor. 
 
 #### Übrigens
 Du kannst das Script auch direkt über die Playtaste im Editor starte. Wenn du eine .py-Datei geöffnet hast, dann findest du das Symbol oben rechts.
 > Beispiel:
 ![grafik](https://github.com/LexQzim/emotouchplotter/assets/12845370/9ef307b3-3aad-4fa4-b4b7-2d502c5abf84)
-
-
 

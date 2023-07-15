@@ -7,12 +7,14 @@ import sys
 # Update this list with your names
 # Keep in mind that you also need to update the list symbol_used, noise_versions and titles
 # all this lists need the same amount of elements
+# please pay attention to spacebars. Replace them with underscore (_)
 fileNames = ["emoTouch_aus_einschleichend_MIT_aufforderung",
              "emoTouch_pretest_ein_ausschleichend_MIT_aufforderung",
              "emoTouch_pretest_ein_ausschleichend_ohne_aufforderung",
              "emoTouch_aus_einschleichend_ohne_neu"]
 
 # you can update this ending if it doesn't fits your needs
+# these are the default endings wich are added to all emotouch .csv-files
 timeline_data_ending = "_timeline_data_v1.6.1"
 session_metadata_ending = "_session_metadata_v1.6.1"
 version_1_7_ending = "_version1.7_(100_ms)"
@@ -38,7 +40,16 @@ titles = ["Versuch:  aus- und einschleichendes Rauschen mit Aufforderung, ID: ",
            "Versuch: ein- und ausschleichendes Rauschen ohne Aufforderung, ID: ",
            "Versuch: aus- und einschleichendes Rauschen ohne Aufforderung, ID: "]
 
+
 def call_operations_1(filename, delimiter, title, draw_signal_boxes, draw_noise, doExtra = False):
+    '''
+    This method can do everything what you want for one session
+    :filename: this is the name of the session
+    :delimiter: this is the .csv delimiter. You set this emotouch before you load the data
+    :draw_signal_boxes: when True then it will draw yellow boxes
+    :draw_noise: You can choose a noise type between 0, 1 and 2
+    :doExtra: If True, then this will also find last ticks and calc mean median and standard deviation and reorder the list
+    '''
     timeline_df = pr.read_and_merge_timeline_data(filename+timeline_data_ending, filename+session_metadata_ending, delimiter, needed_ids, output_filename=filename)
     sd.create_and_save_scatter_plot(timeline_df, title, output_filename=filename, draw_noise=draw_noise, draw_signal_boxes=draw_signal_boxes)
     if doExtra:
@@ -62,13 +73,21 @@ if __name__ == "__main__":
         print("You need to place first your .csv files into this directory.")
         sys.exit()
 
-    for i in range(4):
-        # original data
-        call_operations_1(fileNames[i], delimiter="\t", title=titles[i], draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i], doExtra=True)
-        # resampled data (100 ms)
-        call_operations_1(fileNames[i]+version_1_7_ending, title=titles[i], delimiter=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
+    for i in range(len(fileNames)):
 
-        call_operations_2(fileNames[i], fileNames[i]+version_1_7_ending, delimiter_origin="\t", title=titles[i], delimiter_resampled=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
+        # you can outcomment the operations with #
+
+        # original data
+        call_operations_1(filename=fileNames[i], delimiter=";", title=titles[i], draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
+
+        # resampled data (100 ms)
+        # call_operations_1(filename=fileNames[i]+version_1_7_ending, title=titles[i], delimiter=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i], doExtra=True)
+
+        # plot both original and resampled data in one image
+        # call_operations_2(filename_origin=fileNames[i], filename_resampled=fileNames[i]+version_1_7_ending, delimiter_origin=";", title=titles[i], delimiter_resampled=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
+
+
+
 
 
     # timeline_origin_df = pr.read_and_merge_timeline_data("test_timeline_data", "test_session_metadata", delimiter="\t", needed_ids=needed_ids, output_filename="filtered_testoutput_origin")
