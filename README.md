@@ -33,7 +33,7 @@ python -m venv virtualEnv
 ```
 3. Install all necessary packages with 
 ```
-pip install --requirements.txt
+pip install -r requirements.txt
 ```
 4. Start programm with
 ```
