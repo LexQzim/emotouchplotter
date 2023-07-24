@@ -4,6 +4,7 @@ Main script to start it all
 
 import os
 import sys
+
 import pandaReader as pr
 import seabornDrawer as sd
 
@@ -209,6 +210,39 @@ def call_operations_2(
     )
 
 
+def call_operations_3(filename):
+    timeline_resampled_df = pr.read_and_merge_timeline_data(
+        filename + version_1_7_ending + timeline_data_ending,
+        filename + version_1_7_ending + session_metadata_ending,
+        delimiter=";",
+        needed_ids=needed_ids,
+        output_filename=filename,
+    )
+    timeline_origin_df_blur = pr.read_and_merge_timeline_data(
+        filename + timeline_data_ending,
+        filename + session_metadata_ending,
+        delimiter="\t",
+        needed_ids=needed_ids,
+        tick_type="BLUR",
+    )
+
+    timeline_origin_df_focus = pr.read_and_merge_timeline_data(
+        filename + timeline_data_ending,
+        filename + session_metadata_ending,
+        delimiter="\t",
+        needed_ids=needed_ids,
+        tick_type="FOCUS",
+    )
+    reorderd_timeline_data = pr.reorder_timeline_data(timeline_resampled_df)
+
+    pr.get_blur_and_max_min(
+        reorderd_timeline_data,
+        timeline_origin_df_blur,
+        timeline_origin_df_focus,
+        filename,
+    )
+
+
 if __name__ == "__main__":
     PATH = "data/origin/"
     if not os.path.exists(PATH):
@@ -218,26 +252,33 @@ if __name__ == "__main__":
         print("You need to place first your .csv files into this directory.")
         sys.exit()
 
-    for i, fileName in enumerate(fileNames):
-        # you can outcomment the operations with #
+    # for i, fileName in enumerate(fileNames):
+    #     call_operations_3(fileName)
+    #     # you can outcomment the operations with #
 
-        # original data
-        call_operations_1(
-            filename=fileName,
-            delimiter=";",
-            title=titles[i],
-            draw_signal_boxes=symbol_used[i],
-            draw_noise=noise_versions[i],
-        )
+    #     # original data
+    #     call_operations_1(
+    #         filename=fileName,
+    #         delimiter=";",
+    #         title=titles[i],
+    #         draw_signal_boxes=symbol_used[i],
+    #         draw_noise=noise_versions[i],
+    #     )
 
-        # resampled data (100 ms)
-        # call_operations_1(filename=fileNames[i]+version_1_7_ending, title=titles[i], delimiter=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i], doExtra=True)
+    # resampled data (100 ms)
+    # call_operations_1(filename=fileNames[i]+version_1_7_ending, title=titles[i], delimiter=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i], doExtra=True)
 
-        # plot both original and resampled data in one image
-        # call_operations_2(filename_origin=fileNames[i], filename_resampled=fileNames[i]+version_1_7_ending, delimiter_origin=";", title=titles[i], delimiter_resampled=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
+    # plot both original and resampled data in one image
+    # call_operations_2(filename_origin=fileNames[i], filename_resampled=fileNames[i]+version_1_7_ending, delimiter_origin=";", title=titles[i], delimiter_resampled=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
 
     # timeline_origin_df = pr.read_and_merge_timeline_data("test_timeline_data", "test_session_metadata", delimiter="\t", needed_ids=needed_ids, output_filename="filtered_testoutput_origin")
-    # timeline_resampled_df = pr.read_and_merge_timeline_data("test_resampled_timeline_data", "test_resampled_session_metadata", delimiter=";", needed_ids=needed_ids, output_filename="filtered_testoutput_resampled")
+    # timeline_resampled_df = pr.read_and_merge_timeline_data(
+    #     "test_resampled_timeline_data",
+    #     "test_resampled_session_metadata",
+    #     delimiter=";",
+    #     needed_ids=needed_ids,
+    #     output_filename="filtered_testoutput_resampled",
+    # )
     # sd.create_and_save_scatter_plot(timeline_origin_df, title="SoSci Survey Id: ", output_filename="test_plot", draw_noise=1, draw_signal_boxes=True, testPlot=False)
     # sd.create_and_save_line_and_scatter_plot(timeline_origin_df, timeline_resampled_df, title="SoSci Survey Id: ", output_filename="test_plot", draw_noise=1, draw_signal_boxes=True, testPlot=False)
     # sd.create_and_save_scatter_plot(timeline_resampled_df, title="SoSci Survey Id: ", output_filename="test_plot", draw_noise=1, draw_signal_boxes=True, testPlot=False, dataResampled=True)
@@ -245,4 +286,76 @@ if __name__ == "__main__":
     # pr.find_last_ticks_and_save_to_csv(reorderd_timeline_data, "test")
     # reorderd_timeline_data = pr.calc_mean_median_stdev(reorderd_timeline_data, "test")
 
-    # sd.create_error_timeline_plot(reorderd_timeline_data, noise_version = 1)
+    # sd.create_error_timeline_plot(reorderd_timeline_data, noise_version=1)
+
+    # timeline_origin_df_blur = pr.read_and_merge_timeline_data(
+    #     "test_timeline_data",
+    #     "test_session_metadata",
+    #     delimiter="\t",
+    #     needed_ids=needed_ids,
+    #     tick_type="BLUR",
+    # )
+
+    # timeline_origin_df_focus = pr.read_and_merge_timeline_data(
+    #     "test_timeline_data",
+    #     "test_session_metadata",
+    #     delimiter="\t",
+    #     needed_ids=needed_ids,
+    #     tick_type="FOCUS",
+    # )
+
+    # pr.get_blur_and_max_min(
+    #     reorderd_timeline_data,
+    #     timeline_origin_df_blur,
+    #     timeline_origin_df_focus,
+    #     "test",
+    # )
+
+    # pr.read_noise_text_calc_mean(
+    #     [
+    #         "data/origin/sample_noise_1_fadein.txt",
+    #         "data/origin/sample_noise_1_fadeout.txt",
+    #     ],
+    #     [11, 39],
+    # )
+
+    # fade_in_2_1 = pr.extract_noise_values("data/origin/sample_noise_2_fadein_1.txt")
+    # fade_out_2 = pr.combine_noise_values(
+    #     [
+    #         "data/origin/sample_noise_2_fadein_2.txt",
+    #         "data/origin/sample_noise_2_fadein_2_2.txt",
+    #     ]
+    # )
+    # fade_in_2_2 = pr.combine_noise_values(
+    #     [
+    #         "data/origin/sample_noise_2_fadeout.txt",
+    #         "data/origin/sample_noise_2_fadeout__2.txt",
+    #     ]
+    # )
+
+    # pr.read_noise_text_calc_mean(
+    #     [fade_in_2_1, fade_out_2, fade_in_2_2],
+    #     [0, 0.86, 37],
+    # )
+
+    # fade_in_1 = pr.extract_noise_values("data/origin/sample_noise_1_fadein.txt")
+    # fade_out_1 = pr.extract_noise_values("data/origin/sample_noise_1_fadeout.txt")
+
+    # pr.read_noise_text_calc_mean(
+    #     [fade_out_1, fade_in_1],
+    #     [11, 39],
+    # )
+
+    # pr.read_noise_text_calc_mean([fade_out_2], [50])
+
+    # pr.read_noise_txt("data/origin/sample_noise_1_fadein.txt")
+    # pr.read_noise_txt("data/origin/sample_noise_1_fadeout.txt")
+    # pr.read_noise_txt("data/origin/sample_noise_2_fadein_1.txt")
+    # pr.read_noise_txt(
+    #     "data/origin/sample_noise_2_fadein_2.txt",
+    #     "data/origin/sample_noise_2_fadein_2_2.txt",
+    # )
+    # pr.read_noise_txt(
+    #     "data/origin/sample_noise_2_fadeout.txt",
+    #     "data/origin/sample_noise_2_fadeout__2.txt",
+    # )
