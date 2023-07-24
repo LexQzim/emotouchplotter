@@ -8,6 +8,11 @@ import sys
 import pandaReader as pr
 import seabornDrawer as sd
 
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
 # this is a list for four file sessions.
 # Update this list with your names
 # Keep in mind that you also need to update the list symbol_used, noise_versions and titles
@@ -132,12 +137,6 @@ needed_ids = [
 # Just type False for the amount of your used files
 symbol_used = [True, True, False, False]
 
-# there a three different types
-# noise version 0 = no noise
-# noise version 1 = fade in and then fade out
-# noise version 2 = fade out and then fade int
-noise_versions = [2, 1, 1, 2]
-
 # update for each file type your plot titles
 titles = [
     "Versuch:  aus- und einschleichendes Rauschen mit Aufforderung, ID: ",
@@ -169,7 +168,7 @@ def call_operations_1(
         timeline_df,
         title,
         output_filename=filename,
-        draw_noise=draw_noise,
+        noise=draw_noise,
         draw_signal_boxes=draw_signal_boxes,
     )
     if do_extra:
@@ -205,7 +204,7 @@ def call_operations_2(
         timeline_resampled_df,
         title,
         output_filename=filename_origin,
-        draw_noise=draw_noise,
+        noise=draw_noise,
         draw_signal_boxes=draw_signal_boxes,
     )
 
@@ -252,24 +251,213 @@ if __name__ == "__main__":
         print("You need to place first your .csv files into this directory.")
         sys.exit()
 
-    # for i, fileName in enumerate(fileNames):
-    #     call_operations_3(fileName)
-    #     # you can outcomment the operations with #
+    noise_1 = pr.read_noise_values("noise_1_8000mhz_linear")
+    noise_2 = pr.read_noise_values("noise_2_8000mhz_linear")
 
-    #     # original data
-    #     call_operations_1(
-    #         filename=fileName,
-    #         delimiter=";",
-    #         title=titles[i],
-    #         draw_signal_boxes=symbol_used[i],
-    #         draw_noise=noise_versions[i],
-    #     )
+    noise = [noise_2, noise_1, noise_1, noise_2]
+    # for i, fileName in enumerate(fileNames):
+    # call_operations_3(fileName)
+    # you can outcomment the operations with #
+
+    # original data
+    # call_operations_1(
+    #     filename=fileName,
+    #     delimiter="\t",
+    #     title=titles[i],
+    #     draw_signal_boxes=symbol_used[i],
+    #     draw_noise=noise[i],
+    # )
 
     # resampled data (100 ms)
-    # call_operations_1(filename=fileNames[i]+version_1_7_ending, title=titles[i], delimiter=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i], doExtra=True)
+    # call_operations_1(
+    #     filename=fileNames[i] + version_1_7_ending,
+    #     title=titles[i],
+    #     delimiter=";",
+    #     draw_signal_boxes=symbol_used[i],
+    #     draw_noise=noise[i],
+    #     do_extra=True,
+    # )
 
-    # plot both original and resampled data in one image
-    # call_operations_2(filename_origin=fileNames[i], filename_resampled=fileNames[i]+version_1_7_ending, delimiter_origin=";", title=titles[i], delimiter_resampled=";", draw_signal_boxes=symbol_used[i], draw_noise=noise_versions[i])
+    #  plot both original and resampled data in one image
+    # call_operations_2(
+    #     filename_origin=fileNames[i],
+    #     filename_resampled=fileNames[i] + version_1_7_ending,
+    #     delimiter_origin="\t",
+    #     title=titles[i],
+    #     delimiter_resampled=";",
+    #     draw_signal_boxes=symbol_used[i],
+    #     draw_noise=noise[i],
+    # )
+
+    # for i, filename in enumerate(fileNames):
+    # sd.create_mean_timeline_plot(
+    #     reorderd_timeline_data[i],
+    #     filename,
+    #     noise=noise[i],
+    #     draw_signal_boxes=symbol_used[i],
+    # )
+
+    # reorderd_timeline = reorderd_timeline_data[i].reset_index()
+    # reorderd_timeline = reorderd_timeline.drop(
+    #     reorderd_timeline[reorderd_timeline["created_at_relative"] > 68].index
+    # )
+    # sd.create_mean_timeline_plot(
+    #     reorderd_timeline,
+    #     filename + "_cutted",
+    #     noise=noise[i],
+    #     draw_signal_boxes=symbol_used[i],
+    # )
+
+    reorderd_timeline_data = []
+    reorderd_timeline_data_cutted = []
+
+    for i, fileName in enumerate(fileNames):
+        reordered_timeline = pd.read_csv(
+            "data/refactored/" + fileName + version_1_7_ending + ".csv",
+            delimiter=";",
+            encoding="utf-8",
+            decimal=",",
+            dtype="float",
+        )
+
+        sd.create_mean_timeline_plot(
+            reordered_timeline,
+            fileName,
+            noise=noise[i],
+            draw_signal_boxes=symbol_used[i],
+        )
+
+        reorderd_timeline_data.append(reordered_timeline)
+        cutted = reordered_timeline.drop(
+            reordered_timeline[reordered_timeline["created_at_relative"] > 68].index
+        )
+        reorderd_timeline_data_cutted.append(cutted)
+
+        sd.create_mean_timeline_plot(
+            cutted,
+            fileName + "_cutted",
+            noise=noise[i],
+            draw_signal_boxes=symbol_used[i],
+        )
+
+    sd.create_multiple_mean_timeline_plot(
+        reorderd_timeline_data_cutted[0],
+        reorderd_timeline_data_cutted[3],
+        "kurve_2",
+        noise=noise_2,
+        draw_signal_boxes=False,
+    )
+    sd.create_multiple_mean_timeline_plot(
+        reorderd_timeline_data_cutted[1],
+        reorderd_timeline_data_cutted[2],
+        "kurve_1",
+        noise=noise_1,
+        draw_signal_boxes=False,
+    )
+
+    diff = pd.DataFrame(
+        {
+            "created_at_relative": noise_2["t"],
+            "mean": reorderd_timeline_data_cutted[0]["mean"] - noise_2["db"],
+        }
+    )
+
+    sd.create_mean_timeline_plot(
+        diff,
+        "diff_2",
+        noise=noise_2,
+        draw_signal_boxes=False,
+    )
+
+    diff = pd.DataFrame(
+        {
+            "created_at_relative": noise_1["t"],
+            "mean": reorderd_timeline_data_cutted[1]["mean"] - noise_1["db"],
+        }
+    )
+
+    sd.create_mean_timeline_plot(
+        diff,
+        "diff_1",
+        noise=noise_1,
+        draw_signal_boxes=False,
+    )
+
+    maxIndex = noise_1["db"].idxmax()
+    weg = ["hin"] * maxIndex
+    weg = weg + ["zurück"] * (len(noise_1) - maxIndex)
+
+    hysterese = pd.DataFrame(
+        {
+            "noise": noise_1["db"],
+            "rating": reorderd_timeline_data_cutted[1]["mean"],
+            "wegtyp": weg,
+        }
+    )
+
+    sns.relplot(
+        x="noise",
+        y="rating",
+        data=hysterese,
+        kind="line",
+        marker="o",
+        hue="wegtyp",
+        legend=False,
+        # edgecolor="green",
+        palette=["green", "yellow"],
+        # order=3,
+        # alpha=0.4,
+    )
+
+    plt.show()
+
+    firstMax = noise_2["db"].iloc[:200].idxmax()
+
+    noise_2 = noise_2.drop(noise_2.iloc[:firstMax].index)
+    tmp = reorderd_timeline_data_cutted[0].drop(
+        reorderd_timeline_data_cutted[0].iloc[:firstMax].index
+    )
+
+    minIndex = noise_2["db"].idxmin()
+    weg = ["hin"] * minIndex
+    weg = weg + ["zurück"] * (len(noise_2) - minIndex)
+
+    print(noise_2["db"].iloc[:200].idxmax())
+
+    hysterese = pd.DataFrame(
+        {
+            "noise": noise_2["db"],
+            "rating": tmp["mean"],
+            "wegtyp": weg,
+        }
+    )
+
+    sns.relplot(
+        x="noise",
+        y="rating",
+        data=hysterese,
+        kind="line",
+        marker="o",
+        hue="wegtyp",
+        legend=False,
+        # edgecolor="green",
+        palette=["green", "yellow"],
+        # order=3,
+        # alpha=0.4,
+    )
+
+    # # hysterese = hysterese.loc[: hysterese["noise"].max().idxmin(), :]
+
+    # sns.regplot(
+    #     x="noise",
+    #     y="rating",
+    #     data=hysterese,
+    #     # edgecolor="green",
+    #     color="green",
+    #     # alpha=0.4,
+    # )
+
+    plt.show()
 
     # timeline_origin_df = pr.read_and_merge_timeline_data("test_timeline_data", "test_session_metadata", delimiter="\t", needed_ids=needed_ids, output_filename="filtered_testoutput_origin")
     # timeline_resampled_df = pr.read_and_merge_timeline_data(
@@ -279,14 +467,47 @@ if __name__ == "__main__":
     #     needed_ids=needed_ids,
     #     output_filename="filtered_testoutput_resampled",
     # )
+
     # sd.create_and_save_scatter_plot(timeline_origin_df, title="SoSci Survey Id: ", output_filename="test_plot", draw_noise=1, draw_signal_boxes=True, testPlot=False)
     # sd.create_and_save_line_and_scatter_plot(timeline_origin_df, timeline_resampled_df, title="SoSci Survey Id: ", output_filename="test_plot", draw_noise=1, draw_signal_boxes=True, testPlot=False)
-    # sd.create_and_save_scatter_plot(timeline_resampled_df, title="SoSci Survey Id: ", output_filename="test_plot", draw_noise=1, draw_signal_boxes=True, testPlot=False, dataResampled=True)
+    # sd.create_and_save_scatter_plot(
+    #     timeline_resampled_df,
+    #     title="SoSci Survey Id: ",
+    #     output_filename="test_plot",
+    #     noise=noise_1,
+    #     draw_signal_boxes=True,
+    #     testPlot=False,
+    #     dataResampled=True,
+    # )
     # reorderd_timeline_data = pr.reorder_timeline_data(timeline_resampled_df)
     # pr.find_last_ticks_and_save_to_csv(reorderd_timeline_data, "test")
     # reorderd_timeline_data = pr.calc_mean_median_stdev(reorderd_timeline_data, "test")
+    # sd.create_mean_timeline_plot(
+    #     reorderd_timeline_data, "test_mean", noise_2, draw_signal_boxes=False
+    # )
 
-    # sd.create_error_timeline_plot(reorderd_timeline_data, noise_version=1)
+    # reorderd_timeline_data = reorderd_timeline_data.reset_index()
+    # reorderd_timeline_data = reorderd_timeline_data.drop(
+    #     reorderd_timeline_data[reorderd_timeline_data["created_at_relative"] > 68].index
+    # )
+    # sd.create_mean_timeline_plot(
+    #     reorderd_timeline_data, "test_mean_cutted", noise_2, draw_signal_boxes=False
+    # )
+
+    # print(len(reorderd_timeline_data))
+    # print(len(noise_2))
+
+    # diff = pd.DataFrame(
+    #     {
+    #         "created_at_relative": noise_2["t"],
+    #         "mean": (noise_2["db"] - reorderd_timeline_data["mean"]),
+    #     }
+    # )
+
+    # print(diff.head())
+    # sd.create_mean_timeline_plot(diff, "test_diff", noise_2, draw_signal_boxes=False)
+
+    # sd.create_mean_timeline_plot(reorderd_timeline_data, noise_version=1)
 
     # timeline_origin_df_blur = pr.read_and_merge_timeline_data(
     #     "test_timeline_data",
@@ -311,7 +532,5 @@ if __name__ == "__main__":
     #     "test",
     # )
 
-    pr.extract_noise_values("noise_1_8000mhz")
-    pr.extract_noise_values("noise_2_8000mhz")
-    pr.extract_noise_values("noise_1_8000mhz_linear")
-    pr.extract_noise_values("noise_2_8000mhz_linear")
+    # pr.read_noise_values("noise_1_8000mhz")
+    # pr.read_noise_values("noise_2_8000mhz")
