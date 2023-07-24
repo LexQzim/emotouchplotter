@@ -14,16 +14,18 @@ END_OF_SONG = 68
 COLOR_GREEN = "#04a729"
 COLOR_YELLOW = "#fad419"
 
-ALPHA_30 = "55"
-ALPHA_40 = "66"
+# ALPHA_30 = "55"
+# ALPHA_40 = "66"
 ALPHA_50 = "7F"
-ALPHA_75 = "AA"
+# ALPHA_75 = "AA"
 
 sns.set_theme(style="whitegrid")
 
 # prepare legend
 patch_yellow_box = patches.Patch(
-    color=COLOR_YELLOW+ALPHA_50, edgecolor=COLOR_YELLOW+ALPHA_50, label="Aufforderung"
+    color=COLOR_YELLOW + ALPHA_50,
+    edgecolor=COLOR_YELLOW + ALPHA_50,
+    label="Aufforderung",
 )
 patch_noise_plot = patches.Patch(
     color="#C0C0C055", edgecolor="#C0C0C055", label="Rauschkurve"
@@ -36,7 +38,7 @@ rating_origin = Line2D(
     [0],
     marker="o",
     markersize=7,
-    markerfacecolor=COLOR_GREEN + ALPHA_40,
+    markerfacecolor=COLOR_GREEN + ALPHA_50,
     linestyle="",
     label="Wertungen (original)",
 )
@@ -48,7 +50,7 @@ rating_resampled_dot = Line2D(
     [0],
     marker="o",
     markersize=7,
-    markerfacecolor=COLOR_GREEN + ALPHA_40,
+    markerfacecolor=COLOR_GREEN + ALPHA_50,
     linestyle="",
     label="Wertungen (resampled)",
 )
@@ -57,7 +59,7 @@ mean_rating = Line2D(
     [0],
     marker="o",
     markersize=7,
-    markerfacecolor=COLOR_GREEN + ALPHA_40,
+    markerfacecolor=COLOR_GREEN + ALPHA_50,
     linestyle="",
     label="Mittelwert",
 )
@@ -66,7 +68,7 @@ mean_rating_without = Line2D(
     [0],
     marker="o",
     markersize=7,
-    markerfacecolor=COLOR_GREEN + ALPHA_40,
+    markerfacecolor=COLOR_GREEN + ALPHA_50,
     linestyle="",
     label="Mittelwert (ohne Aufforderung)",
 )
@@ -75,7 +77,7 @@ mean_rating_with = Line2D(
     [0],
     marker="o",
     markersize=7,
-    markerfacecolor="#FFFF0055",
+    markerfacecolor=COLOR_YELLOW + ALPHA_50,
     linestyle="",
     label="Mittelwert (mit Aufforderung)",
 )
@@ -216,7 +218,7 @@ def create_multiple_mean_timeline_plot(
 
 
 def create_hysteresis_plot(
-    mean_values, noise_values, output_filename="", center_is_max=True
+    mean_values, noise_values, noise_type, output_filename="", center_is_max=True
 ):
     if center_is_max:
         point_of_return = noise_values.idxmax()
@@ -239,7 +241,10 @@ def create_hysteresis_plot(
 
     plt.xlabel("Normierte Skala [Rauschen]")
     plt.ylabel("Normierte Skala [Nutzerwertung]")
-    plt.title("Hysteresekurve")
+    plt.title(
+        "Vergleich der empfundenen gegenüber der tatsächlichen Rauschkurve. \n Rauschkurve: "
+        + noise_type
+    )
 
     sns.scatterplot(
         x="noise",
@@ -276,7 +281,84 @@ def create_hysteresis_plot(
 
     plt.legend(handles=[legend_dir_1, legend_dir_2])
 
-    plt.show()
+    # plt.show()
+
+    if output_filename != "":
+        PATH = "data/plots/hysteresis/"
+        if not os.path.exists(PATH):
+            os.makedirs(PATH)
+
+        plt.savefig(PATH + output_filename + ".png")
+        plt.savefig(PATH + output_filename + ".svg")
+
+    plt.clf()
+    plt.close("all")
+
+
+def create_hysteresis_plot_compare(
+    mean_values_1, mean_values_2, noise_values, noise_type, output_filename=""
+):
+    noise = pd.concat([noise_values, noise_values])
+
+    mean_val = pd.concat([mean_values_1, mean_values_2])
+
+    direction = ["typ1"] * len(mean_values_1)
+    direction = direction + ["typ2"] * len(mean_values_2)
+
+    hysterese = pd.DataFrame(
+        {
+            "noise": noise,
+            "rating": mean_val,
+            "direction": direction,
+        }
+    )
+
+    fig = plt.figure(figsize=(13, 10))
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+
+    plt.xlabel("Normierte Skala [Rauschen]")
+    plt.ylabel("Normierte Skala [Nutzerwertung]")
+    plt.title(
+        "Vergleich der empfundenen gegenüber der tatsächlichen Rauschkurve \n Rauschkurve: "
+        + noise_type
+    )
+
+    sns.scatterplot(
+        x="noise",
+        y="rating",
+        data=hysterese,
+        # kind="line",
+        marker=".",
+        hue="direction",
+        legend=False,
+        palette=[COLOR_GREEN, COLOR_YELLOW],
+        edgecolor=None,
+    )
+
+    legend_dir_1 = Line2D(
+        [0],
+        [0],
+        marker="o",
+        markersize=5,
+        markerfacecolor=COLOR_GREEN,
+        markeredgecolor=COLOR_GREEN,
+        linestyle="",
+        label="Ohne Aufforderung",
+    )
+    legend_dir_2 = Line2D(
+        [0],
+        [0],
+        marker="o",
+        markersize=5,
+        markerfacecolor=COLOR_YELLOW,
+        markeredgecolor=COLOR_YELLOW,
+        linestyle="",
+        label="Mit Aufforderung",
+    )
+
+    plt.legend(handles=[legend_dir_1, legend_dir_2])
+
+    # plt.show()
 
     if output_filename != "":
         PATH = "data/plots/hysteresis/"

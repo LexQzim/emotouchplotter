@@ -255,59 +255,41 @@ if __name__ == "__main__":
     noise_2 = pr.read_noise_values("noise_2_8000mhz_linear")
 
     noise = [noise_2, noise_1, noise_1, noise_2]
-    # for i, fileName in enumerate(fileNames):
-    # call_operations_3(fileName)
-    # you can outcomment the operations with #
+    for i, fileName in enumerate(fileNames):
+        call_operations_3(fileName)
+        # you can outcomment the operations with #
 
-    # original data
-    # call_operations_1(
-    #     filename=fileName,
-    #     delimiter="\t",
-    #     title=titles[i],
-    #     draw_signal_boxes=symbol_used[i],
-    #     draw_noise=noise[i],
-    # )
+        # original data
+        call_operations_1(
+            filename=fileName,
+            delimiter="\t",
+            title=titles[i],
+            draw_signal_boxes=symbol_used[i],
+            draw_noise=noise[i],
+        )
 
-    # resampled data (100 ms)
-    # call_operations_1(
-    #     filename=fileNames[i] + version_1_7_ending,
-    #     title=titles[i],
-    #     delimiter=";",
-    #     draw_signal_boxes=symbol_used[i],
-    #     draw_noise=noise[i],
-    #     do_extra=True,
-    # )
+        # resampled data (100 ms)
+        call_operations_1(
+            filename=fileNames[i] + version_1_7_ending,
+            title=titles[i],
+            delimiter=";",
+            draw_signal_boxes=symbol_used[i],
+            draw_noise=noise[i],
+            do_extra=True,
+        )
 
-    #  plot both original and resampled data in one image
-    # call_operations_2(
-    #     filename_origin=fileNames[i],
-    #     filename_resampled=fileNames[i] + version_1_7_ending,
-    #     delimiter_origin="\t",
-    #     title=titles[i],
-    #     delimiter_resampled=";",
-    #     draw_signal_boxes=symbol_used[i],
-    #     draw_noise=noise[i],
-    # )
+        #  plot both original and resampled data in one image
+        call_operations_2(
+            filename_origin=fileNames[i],
+            filename_resampled=fileNames[i] + version_1_7_ending,
+            delimiter_origin="\t",
+            title=titles[i],
+            delimiter_resampled=";",
+            draw_signal_boxes=symbol_used[i],
+            draw_noise=noise[i],
+        )
 
-    # for i, filename in enumerate(fileNames):
-    # sd.create_mean_timeline_plot(
-    #     reorderd_timeline_data[i],
-    #     filename,
-    #     noise=noise[i],
-    #     draw_signal_boxes=symbol_used[i],
-    # )
-
-    # reorderd_timeline = reorderd_timeline_data[i].reset_index()
-    # reorderd_timeline = reorderd_timeline.drop(
-    #     reorderd_timeline[reorderd_timeline["created_at_relative"] > 68].index
-    # )
-    # sd.create_mean_timeline_plot(
-    #     reorderd_timeline,
-    #     filename + "_cutted",
-    #     noise=noise[i],
-    #     draw_signal_boxes=symbol_used[i],
-    # )
-
+    # mean time line plot
     reorderd_timeline_data = []
     reorderd_timeline_data_cutted = []
 
@@ -383,23 +365,64 @@ if __name__ == "__main__":
         draw_signal_boxes=False,
     )
 
-    # drop first raise
+    # hysteresis plot
     sd.create_hysteresis_plot(
         reorderd_timeline_data_cutted[1]["mean"],
         noise_1["db"],
-        "hysteris_1",
+        noise_type="Ein-Ausschleichend mit Aufforderung",
+        output_filename="hysteris_ein_ausschleichend_mit_aufforderung",
         center_is_max=True,
+    )
+
+    sd.create_hysteresis_plot(
+        reorderd_timeline_data_cutted[2]["mean"],
+        noise_1["db"],
+        noise_type="Ein-Ausschleichend ohne Aufforderung",
+        output_filename="hysteris_ein_ausschleichend_ohne_aufforderung",
+        center_is_max=True,
+    )
+
+    sd.create_hysteresis_plot_compare(
+        reorderd_timeline_data_cutted[2]["mean"],
+        reorderd_timeline_data_cutted[1]["mean"],
+        noise_1["db"],
+        noise_type="Ein-Ausschleichend",
+        output_filename="compare_hysteresis_1",
     )
 
     firstMax = noise_2["db"].iloc[:200].idxmax()
 
     tmp_noise = noise_2.drop(noise_2.iloc[:firstMax].index)
-    tmp = reorderd_timeline_data_cutted[0].drop(
+    tmp_1 = reorderd_timeline_data_cutted[0].drop(
         reorderd_timeline_data_cutted[0].iloc[:firstMax].index
     )
 
     sd.create_hysteresis_plot(
-        tmp["mean"], tmp_noise["db"], "hysteris_2", center_is_max=False
+        tmp_1["mean"],
+        tmp_noise["db"],
+        noise_type="Aus-Einschleichend mit Aufforderung",
+        output_filename="hysteris_aus_einschleichend_mit_aufforderung",
+        center_is_max=False,
+    )
+
+    tmp_2 = reorderd_timeline_data_cutted[3].drop(
+        reorderd_timeline_data_cutted[3].iloc[:firstMax].index
+    )
+
+    sd.create_hysteresis_plot(
+        tmp_2["mean"],
+        tmp_noise["db"],
+        noise_type="Aus-Einschleichend ohne Aufforderung",
+        output_filename="hysteris_aus_einschleichend_ohne_aufforderung",
+        center_is_max=False,
+    )
+
+    sd.create_hysteresis_plot_compare(
+        tmp_1["mean"],
+        tmp_2["mean"],
+        tmp_noise["db"],
+        noise_type="Aus-Einschleichend",
+        output_filename="compare_hysteresis_2",
     )
 
     # timeline_origin_df = pr.read_and_merge_timeline_data("test_timeline_data", "test_session_metadata", delimiter="\t", needed_ids=needed_ids, output_filename="filtered_testoutput_origin")
