@@ -1,8 +1,5 @@
 import os
 
-import numpy as np
-import pandas as pd
-
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.lines import Line2D
@@ -11,6 +8,8 @@ from matplotlib.collections import PatchCollection
 import seaborn as sns
 
 symbole_time = [6, 12, 21, 33, 42, 51, 57, 63]
+
+END_OF_SONG = 68
 
 sns.set_theme(style="whitegrid")
 
@@ -45,91 +44,41 @@ rating_resampled_dot = Line2D(
     linestyle="",
     label="Wertungen (resampled)",
 )
+mean_rating = Line2D(
+    [0],
+    [0],
+    marker="o",
+    markersize=10,
+    markerfacecolor="#00800055",
+    linestyle="",
+    label="Mittelwert",
+)
+mean_rating_without = Line2D(
+    [0],
+    [0],
+    marker="o",
+    markersize=10,
+    markerfacecolor="#00800055",
+    linestyle="",
+    label="Mittelwert (ohne Aufforderung)",
+)
+mean_rating_with = Line2D(
+    [0],
+    [0],
+    marker="o",
+    markersize=10,
+    markerfacecolor="#FFFF0055",
+    linestyle="",
+    label="Mittelwert (mit Aufforderung)",
+)
 
 
-def _polynomial_function(p, x, power):
-    result = 0
-    for i in range(power):
-        result += (x ** (power - i)) * p[i]
-    return result
-
-
-def _generate_noise_function(x, power=4, fadeIn=True):
-    """
-    Generates the noise function.
-    This is just a mockup and doesn't really represents the current noise curve.
-    Because it is not clear which exponential equation audacity is using for there fade in or fade out.
-    But if want you can adjust the curve with power.
-    My suggestion is power of 2 but visually it isn't that nice.
-    """
-    if fadeIn:
-        y = [0, 0.8]
-    else:
-        y = [0.8, 0]
-
-    # calculate parameter for polinomial function of given power
-    p = np.polyfit(x, y, power)
-
-    # calculate new values for fitted curve
-    xf = np.linspace(x[0], x[1], 50)
-    yf = _polynomial_function(p, xf, power)
-    yf -= yf[0]
-
-    if not fadeIn:
-        yf = -np.flip(yf)
-
-    polynomDf = pd.DataFrame(data={"x": xf, "y": yf})
-
-    return xf, yf, polynomDf
-
-
-def _draw_noise_function(noise_version):
-    """
-    Adds one of the two available noise functions to the current plot.
-    """
-    if noise_version == 0:
-        return
-    elif noise_version == 1:
-        # version 1
-        # fade in
-        x = [11, 39]
-        xf1, yf1, polynomDf = _generate_noise_function(x)
-        # sns.lineplot(polynomDf, x="x", y="y")
-
-        # fade out
-        x = [39, 68]
-        xf2, yf2, polynomDf = _generate_noise_function(x, fadeIn=False)
-        # sns.lineplot(polynomDf, x="x", y="y")
-
-        calculated_x_noise_values = xf1.tolist() + xf2.tolist()
-        calculated_y_noise_values = yf1.tolist() + yf2.tolist()
-
-    elif noise_version == 2:
-        # version 2
-        # quick fade in
-        x = [0, 0.85]
-        xf1, yf1, polynomDf = _generate_noise_function(x, power=2)
-        # sns.lineplot(polynomDf, x="x", y="y")
-
-        # fade out
-        x = [0.85, 30]
-        xf2, yf2, polynomDf = _generate_noise_function(x, fadeIn=False)
-        # sns.lineplot(polynomDf, x="x", y="y")
-
-        # fade in
-        x = [37, 68]
-        xf3, yf3, polynomDf = _generate_noise_function(x)
-        yf3 = np.flip(yf2)
-        # sns.lineplot(polynomDf, x="x", y="y")
-
-        calculated_x_noise_values = xf1.tolist() + xf2.tolist() + xf3.tolist()
-        calculated_y_noise_values = yf1.tolist() + yf2.tolist() + yf3.tolist()
-
+def _draw_noise(noise):
     plt.fill_between(
-        calculated_x_noise_values,
-        calculated_y_noise_values,
-        alpha=0.3,
-        facecolor="silver",
+        noise.t,
+        noise.db,
+        alpha=0.5,
+        color="silver",
     )
 
 
@@ -147,34 +96,48 @@ def _draw_signal_boxes(axes):
     axes.add_collection(pc)
 
 
-def _prepare_plot(title, draw_boxes=False, noise_version=0):
+def _prepare_plot(title, draw_boxes=False, noise=False):
     """
     Prepares the plot image with size, labels and title.
     It also adds the noise curve and a dashed line for mark the end of the song.
     """
     fig = plt.figure(figsize=(13, 10))
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-    _draw_noise_function(noise_version)
 
     if draw_boxes:
         _draw_signal_boxes(ax)
+    if noise is not False:
+        _draw_noise(noise)
 
-    plt.xlabel("Zeit [sec]")
-    plt.ylabel("Nutzerwertung [a. u.]")
+    plt.xlabel("Zeit in s")
+    plt.ylabel("Normierte Skala")
     plt.title(title)
 
     plt.vlines(68, 0, 1, colors="k", linestyles="dashed")
 
 
-def create_error_timeline_plot(
-    reordered_timeline_df, noise_version=0, draw_signal_boxes=False
+def create_mean_timeline_plot(
+    reordered_timeline_df, output_filename="", noise=False, draw_signal_boxes=False
 ):
     """
     Create plots for mean and median. But work is in progress
     """
+    path = "data/plots/mean/"
 
-    _prepare_plot("Median", draw_signal_boxes, noise_version)
-    # sns.relplot(x='created_at_relative', y='stdev', kind='line', data=reordered_timeline_df)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    # prepare legend labels
+    legend_labels = [song_ends]
+    if noise is not False:
+        legend_labels.append(patch_noise_plot)
+    if draw_signal_boxes:
+        legend_labels.append(patch_yellow_box)
+
+    legend_labels.append(mean_rating)
+
+    _prepare_plot("Mittelwert", draw_signal_boxes, noise)
+
     sns.scatterplot(
         x="created_at_relative",
         y="mean",
@@ -184,7 +147,68 @@ def create_error_timeline_plot(
         alpha=0.4,
     )
 
-    plt.show()
+    # marks the end of the song
+    plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
+
+    plt.legend(handles=legend_labels)
+
+    plt.savefig(path + output_filename + ".png")
+    plt.savefig(path + output_filename + ".svg")
+    # plt.show()
+    plt.close("all")
+
+
+def create_multiple_mean_timeline_plot(
+    timeline_df_with,
+    timeline_df_without,
+    output_filename="",
+    noise=False,
+    draw_signal_boxes=False,
+):
+    """
+    Create plots for mean and median. But work is in progress
+    """
+    path = "data/plots/mean/"
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    # prepare legend labels
+    legend_labels = [song_ends]
+    if noise is not False:
+        legend_labels.append(patch_noise_plot)
+    if draw_signal_boxes:
+        legend_labels.append(patch_yellow_box)
+
+    legend_labels.append(mean_rating_with)
+    legend_labels.append(mean_rating_without)
+
+    _prepare_plot("Mittelwert Vergleich", draw_signal_boxes, noise)
+
+    sns.scatterplot(
+        x="created_at_relative",
+        y="mean",
+        data=timeline_df_with,
+        edgecolor="green",
+        color="green",
+        alpha=0.4,
+    )
+    sns.scatterplot(
+        x="created_at_relative",
+        y="mean",
+        data=timeline_df_without,
+        edgecolor="yellow",
+        color="yellow",
+        alpha=0.4,
+    )
+    # marks the end of the song
+    plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
+
+    plt.legend(handles=legend_labels)
+
+    plt.savefig(path + output_filename + ".png")
+    plt.savefig(path + output_filename + ".svg")
+    # plt.show()
     plt.close("all")
 
 
@@ -192,7 +216,7 @@ def create_and_save_scatter_plot(
     timeline_df,
     title,
     output_filename,
-    draw_noise=0,
+    noise=False,
     draw_signal_boxes=False,
     dataResampled=False,
     testPlot=False,
@@ -202,7 +226,6 @@ def create_and_save_scatter_plot(
     Because of the available data you can choose between original data plot or resampled plot.
     Also you can add the noise curve oder the yellow signal boxes if necessary
     """
-    end_of_song = 68
 
     if dataResampled:
         path = "data/plots/" + output_filename + "/resampled"
@@ -214,7 +237,7 @@ def create_and_save_scatter_plot(
 
     # prepare legend labels
     legend_labels = [song_ends]
-    if draw_noise != 0:
+    if noise is not False:
         legend_labels.append(patch_noise_plot)
     if draw_signal_boxes:
         legend_labels.append(patch_yellow_box)
@@ -224,7 +247,7 @@ def create_and_save_scatter_plot(
         legend_labels.append(rating_origin)
 
     for i, (soSci_survey_Id, data) in enumerate(timeline_df.groupby("soSci_survey_Id")):
-        _prepare_plot(title + str(soSci_survey_Id), draw_signal_boxes, draw_noise)
+        _prepare_plot(title + str(soSci_survey_Id), draw_signal_boxes, noise)
 
         sns.scatterplot(
             x="created_at_relative",
@@ -236,7 +259,7 @@ def create_and_save_scatter_plot(
         )
 
         # marks the end of the song
-        plt.vlines(end_of_song, 0, 1, colors="k", linestyles="dashed")
+        plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
         plt.legend(handles=legend_labels)
 
@@ -245,7 +268,7 @@ def create_and_save_scatter_plot(
             break
 
         plt.savefig(path + "/" + str(soSci_survey_Id) + ".png")
-        # plt.savefig(path+soSci_survey_Id+".svg")
+        plt.savefig(path + "/" + str(soSci_survey_Id) + ".svg")
 
         plt.clf()
         plt.close("all")
@@ -256,7 +279,7 @@ def create_and_save_line_and_scatter_plot(
     timeline_resampled_df,
     title,
     output_filename,
-    draw_noise=0,
+    noise=False,
     draw_signal_boxes=False,
     testPlot=False,
 ):
@@ -266,7 +289,6 @@ def create_and_save_line_and_scatter_plot(
     Therefor you the continuous slider position and see when the users changed it.
     Also you can add the noise curve oder the yellow signal boxes if necessary
     """
-    end_of_song = 68
 
     path = "data/plots/" + output_filename + "/original_resampled"
     if not os.path.exists(path):
@@ -275,7 +297,7 @@ def create_and_save_line_and_scatter_plot(
     # prepare legend labels
     legend_labels = [song_ends]
 
-    if draw_noise != 0:
+    if noise is not False:
         legend_labels.append(patch_noise_plot)
     if draw_signal_boxes:
         legend_labels.append(patch_yellow_box)
@@ -289,7 +311,7 @@ def create_and_save_line_and_scatter_plot(
     for i, (soSci_survey_Id, data) in enumerate(
         timeline_origin_df.groupby("soSci_survey_Id")
     ):
-        _prepare_plot(title + str(soSci_survey_Id), draw_signal_boxes, draw_noise)
+        _prepare_plot(title + str(soSci_survey_Id), draw_signal_boxes, noise)
 
         sns.scatterplot(
             x="created_at_relative",
@@ -306,7 +328,7 @@ def create_and_save_line_and_scatter_plot(
             color="green",
         )
 
-        plt.vlines(end_of_song, 0, 1, colors="k", linestyles="dashed")
+        plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
         plt.legend(handles=legend_labels)
 
@@ -315,7 +337,7 @@ def create_and_save_line_and_scatter_plot(
             break
         else:
             plt.savefig(path + "/" + str(soSci_survey_Id) + ".png")
-            # plt.savefig(path+soSci_survey_Id+".svg")
+            plt.savefig(path + "/" + str(soSci_survey_Id) + ".svg")
 
         plt.clf()
         plt.close("all")
