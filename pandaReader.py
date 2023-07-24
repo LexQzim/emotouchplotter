@@ -90,7 +90,9 @@ def read_and_merge_timeline_data(
 
     # create csv of filtered data
     if output_filename != "":
-        new_timeline_df.to_csv(path + output_filename + ".csv", index=False)
+        new_timeline_df.to_csv(
+            path + output_filename + ".csv", index=False, decimal=",", sep=";"
+        )
 
     return new_timeline_df
 
@@ -111,6 +113,8 @@ def reorder_timeline_data(timeline_df: pd.DataFrame):
     timeline_df = timeline_df.droplevel(axis=1, level=0)
     timeline_df = timeline_df.reset_index()
     timeline_df = timeline_df.rename(columns={"soSci_survey_Id": "index"})
+
+    timeline_df = timeline_df.set_index("created_at_relative")
 
     # show count of rows
     # print(len(timeline_df))
@@ -145,11 +149,13 @@ def calc_mean_median_stdev(timeline_df: pd.DataFrame, output_filename=""):
         os.makedirs(path)
 
     if output_filename != "":
-        timeline_df.to_csv(path + output_filename + ".csv", index=False)
+        timeline_df.to_csv(path + output_filename + ".csv", decimal=",", sep=";")
     return timeline_df
 
 
-def find_last_ticks_and_save_to_csv(timeline_df: pd.DataFrame, output_filename=""):
+def find_last_ticks_and_save_to_csv(
+    timeline_df: pd.DataFrame, output_filename="", decimal=",", sep=";"
+):
     # get all last valid ticks
     last_valid_ticks = timeline_df.apply(pd.Series.last_valid_index)
     # change type
@@ -166,7 +172,9 @@ def find_last_ticks_and_save_to_csv(timeline_df: pd.DataFrame, output_filename="
 
     # create csv of filtered data
     if output_filename != "":
-        last_valid_ticks.to_csv(path + output_filename + ".csv")
+        last_valid_ticks.to_csv(
+            path + output_filename + ".csv", index=False, decimal=",", sep=";"
+        )
 
     # comment this out to get a preview of found data
     # sns.scatterplot(y='soSci_survey_Id',x='timestamp', data=last_valid_ticks, edgecolor = "green", color = "green", alpha = 0.4)
@@ -255,10 +263,12 @@ def get_blur_and_max_min(
 
     # create csv of filtered data
     if output_filename != "":
-        new_df.to_csv(PATH + output_filename + ".csv", index=False)
+        new_df.to_csv(
+            PATH + output_filename + ".csv", index=False, decimal=",", sep=";"
+        )
 
 
-def extract_noise_values(filename, rescale=True):
+def read_noise_values(filename, rescale=True, createPlot=False):
     PATH = "data/noise/"
     df = pd.read_csv(PATH + filename + ".txt", sep="\t", low_memory=False)
     if rescale:
@@ -287,13 +297,16 @@ def extract_noise_values(filename, rescale=True):
 
     df.to_csv(PATH + "filtered_" + filename + ".csv", index=False, decimal=",", sep=";")
 
-    fig = plt.figure(figsize=(13, 10))
-    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-    sns.scatterplot(
-        x="t",
-        y="db",
-        data=df,
-    )
+    if createPlot:
+        fig = plt.figure(figsize=(13, 10))
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+        sns.scatterplot(
+            x="t",
+            y="db",
+            data=df,
+        )
 
-    # plt.show()
-    plt.savefig(PATH + filename + ".png")
+        # plt.show()
+        plt.savefig(PATH + filename + ".png")
+
+    return df
