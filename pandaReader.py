@@ -258,202 +258,42 @@ def get_blur_and_max_min(
         new_df.to_csv(PATH + output_filename + ".csv", index=False)
 
 
-def extract_noise_values(filename):
-    df = pd.read_csv(filename, sep="\t", low_memory=False)
-    df = df.drop(df[df["db_l"] == "[-inf]"].index)
-    df = df.drop(df[df["db_r"] == "[-inf]"].index)
-    df = df.drop(df[df["db_l"] == "[inf]"].index)
-    df = df.drop(df[df["db_r"] == "[inf]"].index)
+def extract_noise_values(filename, rescale=True):
+    PATH = "data/noise/"
+    df = pd.read_csv(PATH + filename + ".txt", sep="\t", low_memory=False)
+    if rescale:
+        df = df.drop(df[df["db"] == "[-inf]"].index)
+        df = df.drop(df[df["db"] == "[inf]"].index)
 
     df = df.astype(
         {
-            "t_l": "float32",
-            "db_l": "float32",
-            "t_r": "float32",
-            "db_r": "float32",
+            "t": "float32",
+            "db": "float32",
         }
     )
 
-    noise = [(i + j) / 2 for i, j in zip(df["db_l"], df["db_r"])]
+    # Min-Max Normalization
+    df = df.abs()
 
-    for i in range(10):
-        del noise[-1]
+    df.to_csv(PATH + filename + ".csv", index=False, decimal=",", sep=";")
+    df = df.groupby(np.arange(len(df)) // 800).mean()
 
-    noise = [x * -1 for x in noise]
+    df = df.round({"t": 1, "db": 7})
+    if rescale:
+        tmp_df = df.drop("t", axis=1)
+        df_norm = (tmp_df - tmp_df.min()) / (tmp_df.max() - tmp_df.min())
 
-    return noise
+        df["db"] = df_norm["db"]
 
+    df.to_csv(PATH + "filtered_" + filename + ".csv", index=False, decimal=",", sep=";")
 
-def combine_noise_values(filenames: list):
-    noise = []
-    for filename in filenames:
-        noise += extract_noise_values(filename)
-
-    return noise
-
-
-def read_noise_text_calc_mean(noises: list, starttimes: list):
-    combined_noise = [0] * int((starttimes[0] * 10))
-
-    time = np.linspace(0, 68, 680)
-    n = 4800
-
-    for i, noise in enumerate(noises):
-        calced_mean_100ms = [
-            sum(noise[i : i + n]) // n for i in range(0, len(noise), n)
-        ]
-        calced_mean_100ms = [
-            scale(x, (min(calced_mean_100ms), max(calced_mean_100ms)))
-            for x in calced_mean_100ms
-        ]
-
-        # calced_mean_100ms = list(map(abs, calced_mean_100ms))
-
-        # calced_mean_100ms = [x * -1 for x in calced_mean_100ms]
-
-        # calced_mean_100ms = [
-        #     float(i) / max(calced_mean_100ms) for i in calced_mean_100ms
-        # ]
-
-        # calced_mean_100ms.reverse()
-
-        combined_noise = combined_noise + calced_mean_100ms
-
-        if i < len(starttimes) - 1:
-            if len(combined_noise) != starttimes[i + 1]:
-                next_start_absolut = starttimes[i + 1] * 10
-                next_start_relative = next_start_absolut - len(combined_noise)
-                combined_noise = combined_noise + [0] * int(next_start_relative)
-
-    # noise = [float(i) / max(noise) for i in noise]
-
-    # noise = [
-    #     float(i) + max_neg_noise for i in noise
-    # ]
-    next_start_relative = len(time) - len(combined_noise)
-    combined_noise = combined_noise + [0] * next_start_relative
-
-    # # time = range(0, len(list2)) / 10
-    # time = np.linspace(0, len(list2), len(list2))
-    # print(time)
-
-    new_df = pd.DataFrame([time, combined_noise], index=["x", "y"]).T
-    # print(new_df.head())
     fig = plt.figure(figsize=(13, 10))
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
     sns.scatterplot(
-        x="x",
-        y="y",
-        data=new_df,
+        x="t",
+        y="db",
+        data=df,
     )
 
-    plt.show()
-
-
-def f(x, A, B):
-    return A * np.exp(B * x) + A
-
-
-def scale(x, srcRange):
-    return (x - srcRange[0]) / (srcRange[1] - srcRange[0])
-
-
-def read_noise_txt(filename, secondFilename=""):
-    data = pd.read_csv(filename, sep="\t")
-    data = data.drop(data[data["db_l"] == "[-inf]"].index)
-    data = data.astype(
-        {
-            "t_l": "float32",
-            "db_l": "float32",
-            "t_r": "float32",
-            "db_r": "float32",
-        }
-    )
-
-    if secondFilename != "":
-        data2 = pd.read_csv(secondFilename, sep="\t")
-        data2 = data2.drop(data2[data2["db_l"] == "[-inf]"].index)
-        data2 = data2.astype(
-            {
-                "t_l": "float32",
-                "db_l": "float32",
-                "t_r": "float32",
-                "db_r": "float32",
-            }
-        )
-
-        # print(len(data["db_l"]))
-        y1 = data["db_l"].to_list()
-        del y1[::2]
-        y2 = data2["db_l"].to_list()
-        del y2[::2]
-        # print(len(data2["db_l"]))
-        y_values = y1 + y2
-        x_values = [0.00002, 0.00006]
-        for i in range(len(y_values)):
-            if i < 2:
-                continue
-            x_values.append(x_values[i - 1] + 0.00004)
-
-        print(len(x_values))
-        # y_values = y_values * (-1)
-        print(len(y_values))
-
-        dict = {"x": x_values, "y": y_values}
-
-        # df = pd.DataFrame(dict)
-        df = pd.DataFrame([x_values, y_values], index=["x", "y"]).T
-        df["y"] = df["y"] * (-1)
-
-        # print(df.head())
-
-        fig = plt.figure(figsize=(13, 10))
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-        sns.scatterplot(
-            x="x",
-            y="y",
-            data=df,
-        )
-        plt.savefig(filename + ".png")
-
-    else:
-        data["db_l"] = data["db_l"] * (-1)
-        # data["t_l"] = data["t_l"] + 11
-
-        # calculate parameter for polinomial function of given power
-        # p = np.polyfit(x=data["t_l"], y=data["db_l"], deg=2)
-
-        # calculate new values for fitted curve
-        # xf = np.linspace(11, 23, 50)
-        # yf = sd._polynomial_function(p, xf, 2)
-
-        # yf -= yf[0]
-
-        # if not fadeIn:
-        # yf = sio.curve_fit(f, data["t_l"], data["db_l"])
-        # yf -= yf[0]
-        # yf = -np.flip(yf)
-
-        # polynomDf = pd.DataFrame(data={"x": data["t_l"], "y": yf})
-        # yf = f(data["t_l"], *yf[0])
-        # print(yf[-1])
-        # yf = -np.flip(yf)
-        # yf -= yf[-1]
-
-        # plt.plot(data["t_l"], yf)
-
-        fig = plt.figure(figsize=(13, 10))
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-        sns.scatterplot(
-            x="t_l",
-            y="db_l",
-            data=data,
-        )
-        # sns.lineplot(
-        #     x="x",
-        #     y="y",
-        #     data=polynomDf,
-        # )
-
-        # plt.show()
-        plt.savefig(filename + ".png")
+    # plt.show()
+    plt.savefig(PATH + filename + ".png")

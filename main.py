@@ -311,51 +311,7 @@ if __name__ == "__main__":
     #     "test",
     # )
 
-    # pr.read_noise_text_calc_mean(
-    #     [
-    #         "data/origin/sample_noise_1_fadein.txt",
-    #         "data/origin/sample_noise_1_fadeout.txt",
-    #     ],
-    #     [11, 39],
-    # )
-
-    # fade_in_2_1 = pr.extract_noise_values("data/origin/sample_noise_2_fadein_1.txt")
-    # fade_out_2 = pr.combine_noise_values(
-    #     [
-    #         "data/origin/sample_noise_2_fadein_2.txt",
-    #         "data/origin/sample_noise_2_fadein_2_2.txt",
-    #     ]
-    # )
-    # fade_in_2_2 = pr.combine_noise_values(
-    #     [
-    #         "data/origin/sample_noise_2_fadeout.txt",
-    #         "data/origin/sample_noise_2_fadeout__2.txt",
-    #     ]
-    # )
-
-    # pr.read_noise_text_calc_mean(
-    #     [fade_in_2_1, fade_out_2, fade_in_2_2],
-    #     [0, 0.86, 37],
-    # )
-
-    # fade_in_1 = pr.extract_noise_values("data/origin/sample_noise_1_fadein.txt")
-    # fade_out_1 = pr.extract_noise_values("data/origin/sample_noise_1_fadeout.txt")
-
-    # pr.read_noise_text_calc_mean(
-    #     [fade_out_1, fade_in_1],
-    #     [11, 39],
-    # )
-
-    # pr.read_noise_text_calc_mean([fade_out_2], [50])
-
-    # pr.read_noise_txt("data/origin/sample_noise_1_fadein.txt")
-    # pr.read_noise_txt("data/origin/sample_noise_1_fadeout.txt")
-    # pr.read_noise_txt("data/origin/sample_noise_2_fadein_1.txt")
-    # pr.read_noise_txt(
-    #     "data/origin/sample_noise_2_fadein_2.txt",
-    #     "data/origin/sample_noise_2_fadein_2_2.txt",
-    # )
-    # pr.read_noise_txt(
-    #     "data/origin/sample_noise_2_fadeout.txt",
-    #     "data/origin/sample_noise_2_fadeout__2.txt",
-    # )
+    pr.extract_noise_values("noise_1_8000mhz")
+    pr.extract_noise_values("noise_2_8000mhz")
+    pr.extract_noise_values("noise_1_8000mhz_linear")
+    pr.extract_noise_values("noise_2_8000mhz_linear")
