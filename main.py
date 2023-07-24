@@ -383,81 +383,24 @@ if __name__ == "__main__":
         draw_signal_boxes=False,
     )
 
-    maxIndex = noise_1["db"].idxmax()
-    weg = ["hin"] * maxIndex
-    weg = weg + ["zurück"] * (len(noise_1) - maxIndex)
-
-    hysterese = pd.DataFrame(
-        {
-            "noise": noise_1["db"],
-            "rating": reorderd_timeline_data_cutted[1]["mean"],
-            "wegtyp": weg,
-        }
+    # drop first raise
+    sd.create_hysteresis_plot(
+        reorderd_timeline_data_cutted[1]["mean"],
+        noise_1["db"],
+        "hysteris_1",
+        center_is_max=True,
     )
-
-    sns.relplot(
-        x="noise",
-        y="rating",
-        data=hysterese,
-        kind="line",
-        marker="o",
-        hue="wegtyp",
-        legend=False,
-        # edgecolor="green",
-        palette=["green", "yellow"],
-        # order=3,
-        # alpha=0.4,
-    )
-
-    plt.show()
 
     firstMax = noise_2["db"].iloc[:200].idxmax()
 
-    noise_2 = noise_2.drop(noise_2.iloc[:firstMax].index)
+    tmp_noise = noise_2.drop(noise_2.iloc[:firstMax].index)
     tmp = reorderd_timeline_data_cutted[0].drop(
         reorderd_timeline_data_cutted[0].iloc[:firstMax].index
     )
 
-    minIndex = noise_2["db"].idxmin()
-    weg = ["hin"] * minIndex
-    weg = weg + ["zurück"] * (len(noise_2) - minIndex)
-
-    print(noise_2["db"].iloc[:200].idxmax())
-
-    hysterese = pd.DataFrame(
-        {
-            "noise": noise_2["db"],
-            "rating": tmp["mean"],
-            "wegtyp": weg,
-        }
+    sd.create_hysteresis_plot(
+        tmp["mean"], tmp_noise["db"], "hysteris_2", center_is_max=False
     )
-
-    sns.relplot(
-        x="noise",
-        y="rating",
-        data=hysterese,
-        kind="line",
-        marker="o",
-        hue="wegtyp",
-        legend=False,
-        # edgecolor="green",
-        palette=["green", "yellow"],
-        # order=3,
-        # alpha=0.4,
-    )
-
-    # # hysterese = hysterese.loc[: hysterese["noise"].max().idxmin(), :]
-
-    # sns.regplot(
-    #     x="noise",
-    #     y="rating",
-    #     data=hysterese,
-    #     # edgecolor="green",
-    #     color="green",
-    #     # alpha=0.4,
-    # )
-
-    plt.show()
 
     # timeline_origin_df = pr.read_and_merge_timeline_data("test_timeline_data", "test_session_metadata", delimiter="\t", needed_ids=needed_ids, output_filename="filtered_testoutput_origin")
     # timeline_resampled_df = pr.read_and_merge_timeline_data(

@@ -1,5 +1,6 @@
 import os
 
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.lines import Line2D
@@ -10,12 +11,19 @@ import seaborn as sns
 symbole_time = [6, 12, 21, 33, 42, 51, 57, 63]
 
 END_OF_SONG = 68
+COLOR_GREEN = "#04a729"
+COLOR_YELLOW = "#fad419"
+
+ALPHA_30 = "55"
+ALPHA_40 = "66"
+ALPHA_50 = "7F"
+ALPHA_75 = "AA"
 
 sns.set_theme(style="whitegrid")
 
 # prepare legend
 patch_yellow_box = patches.Patch(
-    color="#FFFF0055", edgecolor="#FFFF0055", label="Aufforderung"
+    color=COLOR_YELLOW+ALPHA_50, edgecolor=COLOR_YELLOW+ALPHA_50, label="Aufforderung"
 )
 patch_noise_plot = patches.Patch(
     color="#C0C0C055", edgecolor="#C0C0C055", label="Rauschkurve"
@@ -27,20 +35,20 @@ rating_origin = Line2D(
     [0],
     [0],
     marker="o",
-    markersize=10,
-    markerfacecolor="#00800055",
+    markersize=7,
+    markerfacecolor=COLOR_GREEN + ALPHA_40,
     linestyle="",
     label="Wertungen (original)",
 )
 rating_resampled_line = Line2D(
-    [0], [0], color="#008000", linestyle="solid", label="Wertungen (resampled)"
+    [0], [0], color=COLOR_GREEN, linestyle="solid", label="Wertungen (resampled)"
 )
 rating_resampled_dot = Line2D(
     [0],
     [0],
     marker="o",
-    markersize=10,
-    markerfacecolor="#00800055",
+    markersize=7,
+    markerfacecolor=COLOR_GREEN + ALPHA_40,
     linestyle="",
     label="Wertungen (resampled)",
 )
@@ -48,8 +56,8 @@ mean_rating = Line2D(
     [0],
     [0],
     marker="o",
-    markersize=10,
-    markerfacecolor="#00800055",
+    markersize=7,
+    markerfacecolor=COLOR_GREEN + ALPHA_40,
     linestyle="",
     label="Mittelwert",
 )
@@ -57,8 +65,8 @@ mean_rating_without = Line2D(
     [0],
     [0],
     marker="o",
-    markersize=10,
-    markerfacecolor="#00800055",
+    markersize=7,
+    markerfacecolor=COLOR_GREEN + ALPHA_40,
     linestyle="",
     label="Mittelwert (ohne Aufforderung)",
 )
@@ -66,7 +74,7 @@ mean_rating_with = Line2D(
     [0],
     [0],
     marker="o",
-    markersize=10,
+    markersize=7,
     markerfacecolor="#FFFF0055",
     linestyle="",
     label="Mittelwert (mit Aufforderung)",
@@ -91,7 +99,7 @@ def _draw_signal_boxes(axes):
         signal = patches.Rectangle((time, 0), 3, 1)
         rects.append(signal)
 
-    pc = PatchCollection(rects, facecolor="yellow", alpha=0.15)
+    pc = PatchCollection(rects, facecolor=COLOR_YELLOW, alpha=0.15)
 
     axes.add_collection(pc)
 
@@ -113,7 +121,7 @@ def _prepare_plot(title, draw_boxes=False, noise=False):
     plt.ylabel("Normierte Skala")
     plt.title(title)
 
-    plt.vlines(68, 0, 1, colors="k", linestyles="dashed")
+    plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
 
 def create_mean_timeline_plot(
@@ -142,13 +150,10 @@ def create_mean_timeline_plot(
         x="created_at_relative",
         y="mean",
         data=reordered_timeline_df,
-        edgecolor="green",
-        color="green",
+        edgecolor=COLOR_GREEN,
+        color=COLOR_GREEN,
         alpha=0.4,
     )
-
-    # marks the end of the song
-    plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
     plt.legend(handles=legend_labels)
 
@@ -189,26 +194,99 @@ def create_multiple_mean_timeline_plot(
         x="created_at_relative",
         y="mean",
         data=timeline_df_with,
-        edgecolor="green",
-        color="green",
-        alpha=0.4,
+        edgecolor=COLOR_GREEN,
+        color=COLOR_GREEN,
+        alpha=0.5,
     )
     sns.scatterplot(
         x="created_at_relative",
         y="mean",
         data=timeline_df_without,
-        edgecolor="yellow",
-        color="yellow",
-        alpha=0.4,
+        edgecolor=COLOR_YELLOW,
+        color=COLOR_YELLOW,
+        alpha=0.5,
     )
-    # marks the end of the song
-    plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
     plt.legend(handles=legend_labels)
 
     plt.savefig(path + output_filename + ".png")
     plt.savefig(path + output_filename + ".svg")
     # plt.show()
+    plt.close("all")
+
+
+def create_hysteresis_plot(
+    mean_values, noise_values, output_filename="", center_is_max=True
+):
+    if center_is_max:
+        point_of_return = noise_values.idxmax()
+    else:
+        point_of_return = noise_values[noise_values == 0].last_valid_index()
+
+    direction = ["hin"] * point_of_return
+    direction = direction + ["zurück"] * (len(noise_values) - point_of_return)
+
+    hysterese = pd.DataFrame(
+        {
+            "noise": noise_values,
+            "rating": mean_values,
+            "direction": direction,
+        }
+    )
+
+    fig = plt.figure(figsize=(13, 10))
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+
+    plt.xlabel("Normierte Skala [Rauschen]")
+    plt.ylabel("Normierte Skala [Nutzerwertung]")
+    plt.title("Hysteresekurve")
+
+    sns.scatterplot(
+        x="noise",
+        y="rating",
+        data=hysterese,
+        # kind="line",
+        marker=".",
+        hue="direction",
+        legend=False,
+        palette=[COLOR_GREEN, COLOR_YELLOW],
+        edgecolor=None,
+    )
+
+    legend_dir_1 = Line2D(
+        [0],
+        [0],
+        marker="o",
+        markersize=5,
+        markerfacecolor=COLOR_GREEN,
+        markeredgecolor=COLOR_GREEN,
+        linestyle="",
+        label="Hinweg",
+    )
+    legend_dir_2 = Line2D(
+        [0],
+        [0],
+        marker="o",
+        markersize=5,
+        markerfacecolor=COLOR_YELLOW,
+        markeredgecolor=COLOR_YELLOW,
+        linestyle="",
+        label="Rückweg",
+    )
+
+    plt.legend(handles=[legend_dir_1, legend_dir_2])
+
+    plt.show()
+
+    if output_filename != "":
+        PATH = "data/plots/hysteresis/"
+        if not os.path.exists(PATH):
+            os.makedirs(PATH)
+
+        plt.savefig(PATH + output_filename + ".png")
+        plt.savefig(PATH + output_filename + ".svg")
+
+    plt.clf()
     plt.close("all")
 
 
@@ -253,13 +331,10 @@ def create_and_save_scatter_plot(
             x="created_at_relative",
             y="x",
             data=data,
-            edgecolor="green",
-            color="green",
+            edgecolor=COLOR_GREEN,
+            color=COLOR_GREEN,
             alpha=0.4,
         )
-
-        # marks the end of the song
-        plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
         plt.legend(handles=legend_labels)
 
@@ -317,18 +392,16 @@ def create_and_save_line_and_scatter_plot(
             x="created_at_relative",
             y="x",
             data=data,
-            edgecolor="green",
-            color="green",
+            edgecolor=COLOR_GREEN,
+            color=COLOR_GREEN,
             alpha=0.4,
         )
         sns.lineplot(
             x="created_at_relative",
             y="x",
             data=timeline_resampled_group.get_group(soSci_survey_Id),
-            color="green",
+            color=COLOR_GREEN,
         )
-
-        plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
         plt.legend(handles=legend_labels)
 
