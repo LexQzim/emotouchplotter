@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.lines import Line2D
 from matplotlib.collections import PatchCollection
-
+import numpy as np
 import seaborn as sns
 
 symbole_time = [6, 12, 21, 33, 42, 51, 57, 63]
@@ -24,11 +24,10 @@ sns.set_theme(style="whitegrid")
 # prepare legend
 patch_yellow_box = patches.Patch(
     color=COLOR_YELLOW + ALPHA_50,
-    edgecolor=COLOR_YELLOW + ALPHA_50,
     label="Aufforderung",
 )
 patch_noise_plot = patches.Patch(
-    color="#C0C0C055", edgecolor="#C0C0C055", label="Rauschkurve"
+    color="#C0C0C055", label="Rauschkurve"
 )
 song_ends = Line2D(
     [0], [0], color="k", linestyle="dashed", label="Ende vom Liedausschnitt"
@@ -127,12 +126,12 @@ def _prepare_plot(title, draw_boxes=False, noise=False):
 
 
 def create_mean_timeline_plot(
-    reordered_timeline_df, output_filename="", noise=False, draw_signal_boxes=False
+    reordered_timeline_df, output_filename="", noise=False, draw_signal_boxes=False, path = "data/plots/mean/"
 ):
     """
     Create plots for mean and median. But work is in progress
     """
-    path = "data/plots/mean/"
+    
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -165,17 +164,17 @@ def create_mean_timeline_plot(
     plt.close("all")
 
 
-def create_multiple_mean_timeline_plot(
+def create_and_compare_mean_timeline_plots(
     timeline_df_with,
     timeline_df_without,
     output_filename="",
     noise=False,
     draw_signal_boxes=False,
+    path = "data/plots/mean/"
 ):
     """
     Create plots for mean and median. But work is in progress
     """
-    path = "data/plots/mean/"
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -218,15 +217,38 @@ def create_multiple_mean_timeline_plot(
 
 
 def create_hysteresis_plot(
-    mean_values, noise_values, noise_type, output_filename="", center_is_max=True
+    mean_values, noise_values, noise_type, output_filename="", center_is_max=True, path="data/plots/hysteresis/"
 ):
+    if len(noise_values) < 1:
+        print("noise list is to small!")
+        return 
+    
+    # find max or min noise value 
     if center_is_max:
-        point_of_return = noise_values.idxmax()
+        index_of_first_extrema = noise_values.idxmax()
     else:
-        point_of_return = noise_values[noise_values == 0].last_valid_index()
-
-    direction = ["hin"] * point_of_return
-    direction = direction + ["zurück"] * (len(noise_values) - point_of_return)
+        index_of_first_extrema = noise_values[noise_values == 0].last_valid_index()
+        if index_of_first_extrema == None:
+            index_of_first_extrema = noise_values.idxmin()
+    
+    # get all maxima/minima and then select the central index. 
+    # This is the central turning point of noise changes
+    central_extrema = noise_values.loc[noise_values == noise_values[index_of_first_extrema]].index
+    # print(len(central_extrema))
+    if len(central_extrema) == 1:
+        index_of_center = central_extrema[0]
+    else:
+        index_of_center = central_extrema[:int(len(central_extrema)/2)][0]
+    
+    if center_is_max:
+        direction = ["up"] * index_of_center
+        direction = direction + ["down"] * (len(noise_values) - index_of_center)
+        color_palette=[COLOR_YELLOW, COLOR_GREEN]
+    else:
+        direction = ["down"] * index_of_center
+        direction = direction + ["up"] * (len(noise_values) - index_of_center)
+        color_palette=[COLOR_GREEN, COLOR_YELLOW]
+    
 
     hysterese = pd.DataFrame(
         {
@@ -239,8 +261,15 @@ def create_hysteresis_plot(
     fig = plt.figure(figsize=(13, 10))
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
+    
+    plt.xlim((0,1))
+    plt.ylim((0,1))
     plt.xlabel("Normierte Skala [Rauschen]")
     plt.ylabel("Normierte Skala [Nutzerwertung]")
+    plt.xticks(np.arange(0, 1.1, step=0.1))
+    plt.setp(ax.get_xticklabels()[1::2], visible=False)
+    plt.yticks(np.arange(0, 1.1, step=0.1))
+    plt.setp(ax.get_yticklabels()[1::2], visible=False)
     plt.title(
         "Vergleich der empfundenen gegenüber der tatsächlichen Rauschkurve. \n Rauschkurve: "
         + noise_type
@@ -254,7 +283,7 @@ def create_hysteresis_plot(
         marker=".",
         hue="direction",
         legend=False,
-        palette=[COLOR_GREEN, COLOR_YELLOW],
+        palette=color_palette,
         edgecolor=None,
     )
 
@@ -266,7 +295,7 @@ def create_hysteresis_plot(
         markerfacecolor=COLOR_GREEN,
         markeredgecolor=COLOR_GREEN,
         linestyle="",
-        label="Hinweg",
+        label="Maximum nach Minimum",
     )
     legend_dir_2 = Line2D(
         [0],
@@ -276,34 +305,51 @@ def create_hysteresis_plot(
         markerfacecolor=COLOR_YELLOW,
         markeredgecolor=COLOR_YELLOW,
         linestyle="",
-        label="Rückweg",
+        label="Minimum nach Maximum",
+    )
+    
+    start = Line2D(
+        [0],
+        [0],
+        marker="o",
+        markersize=10,
+        color="red",
+        linestyle="",
+        label="Versuchsanfang",
     )
 
-    plt.legend(handles=[legend_dir_1, legend_dir_2])
+    plt.legend(handles=[legend_dir_1, legend_dir_2, start])
+    if center_is_max:
+        start_x = [0]
+        start_y = [0.5]
+    else:
+        start_x = [1]
+        start_y = [0.5]
+
+    plt.plot(start_x, start_y, marker="o", markersize=10, color="red")
 
     # plt.show()
 
     if output_filename != "":
-        PATH = "data/plots/hysteresis/"
-        if not os.path.exists(PATH):
-            os.makedirs(PATH)
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-        plt.savefig(PATH + output_filename + ".png")
-        plt.savefig(PATH + output_filename + ".svg")
+        plt.savefig(path + output_filename + ".png")
+        plt.savefig(path + output_filename + ".svg")
 
     plt.clf()
     plt.close("all")
 
 
 def create_hysteresis_plot_compare(
-    mean_values_1, mean_values_2, noise_values, noise_type, output_filename=""
+    mean_values_without, mean_values_with, noise_values, noise_type,start_at_zero, output_filename="", path = "data/plots/hysteresis/"
 ):
     noise = pd.concat([noise_values, noise_values])
 
-    mean_val = pd.concat([mean_values_1, mean_values_2])
+    mean_val = pd.concat([mean_values_without, mean_values_with])
 
-    direction = ["typ1"] * len(mean_values_1)
-    direction = direction + ["typ2"] * len(mean_values_2)
+    direction = ["typ1"] * len(mean_values_without)
+    direction = direction + ["typ2"] * len(mean_values_with)
 
     hysterese = pd.DataFrame(
         {
@@ -316,8 +362,14 @@ def create_hysteresis_plot_compare(
     fig = plt.figure(figsize=(13, 10))
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
+    plt.xlim((0,1))
+    plt.ylim((0,1))
     plt.xlabel("Normierte Skala [Rauschen]")
     plt.ylabel("Normierte Skala [Nutzerwertung]")
+    plt.xticks(np.arange(0, 1.1, step=0.1))
+    plt.setp(ax.get_xticklabels()[1::2], visible=False)
+    plt.yticks(np.arange(0, 1.1, step=0.1))
+    plt.setp(ax.get_yticklabels()[1::2], visible=False)
     plt.title(
         "Vergleich der empfundenen gegenüber der tatsächlichen Rauschkurve \n Rauschkurve: "
         + noise_type
@@ -356,17 +408,34 @@ def create_hysteresis_plot_compare(
         label="Mit Aufforderung",
     )
 
-    plt.legend(handles=[legend_dir_1, legend_dir_2])
+    start = Line2D(
+        [0],
+        [0],
+        marker="o",
+        markersize=10,
+        color="red",
+        linestyle="",
+        label="Versuchsanfang",
+    )
+
+    plt.legend(handles=[legend_dir_1, legend_dir_2, start])
+    if start_at_zero:
+        start_x = [0]
+        start_y = [0.5]
+    else:
+        start_x = [1]
+        start_y = [0.5]
+
+    plt.plot(start_x, start_y, marker="o", markersize=10, color="red")
 
     # plt.show()
 
     if output_filename != "":
-        PATH = "data/plots/hysteresis/"
-        if not os.path.exists(PATH):
-            os.makedirs(PATH)
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-        plt.savefig(PATH + output_filename + ".png")
-        plt.savefig(PATH + output_filename + ".svg")
+        plt.savefig(path + output_filename + ".png")
+        plt.savefig(path + output_filename + ".svg")
 
     plt.clf()
     plt.close("all")
