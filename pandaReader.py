@@ -3,8 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import seabornDrawer as sd
-import scipy.optimize as sio
 
 pd.options.display.max_rows = 9999
 
@@ -116,17 +114,6 @@ def reorder_timeline_data(timeline_df: pd.DataFrame):
 
     timeline_df = timeline_df.set_index("created_at_relative")
 
-    # show count of rows
-    # print(len(timeline_df))
-    # show preview of first 5 rows
-    # print(timeline_df.head())
-    # show last index
-    # print(timeline_df.index[-1])
-
-    # print(timeline_df["created_at_relative"].max())
-    # print(timeline_df[447].min())
-    # print(timeline_df[447].max())
-
     return timeline_df
 
 
@@ -135,8 +122,7 @@ def calc_mean_median_stdev(timeline_df: pd.DataFrame, output_filename=""):
     timeline_df["median"] = timeline_df.median(axis=1)
     timeline_df["stdev"] = timeline_df.std(axis=1)
 
-    # reorder header level and give it a propper namer
-    # timeline_df = timeline_df.droplevel(axis=1, level=0)
+    # reorder header level and give it a propper name
     header = timeline_df.columns.to_list()
     header[-1] = "stdev"
     header[-2] = "median"
@@ -173,7 +159,7 @@ def find_last_ticks_and_save_to_csv(
     # create csv of filtered data
     if output_filename != "":
         last_valid_ticks.to_csv(
-            path + output_filename + ".csv", index=False, decimal=",", sep=";"
+            path + output_filename + ".csv", index=False, decimal=decimal, sep=sep
         )
 
     # comment this out to get a preview of found data
