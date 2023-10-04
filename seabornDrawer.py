@@ -26,9 +26,7 @@ patch_yellow_box = patches.Patch(
     color=COLOR_YELLOW + ALPHA_50,
     label="Aufforderung",
 )
-patch_noise_plot = patches.Patch(
-    color="#C0C0C055", label="Rauschkurve"
-)
+patch_noise_plot = patches.Patch(color="#C0C0C055", label="Rauschkurve")
 song_ends = Line2D(
     [0], [0], color="k", linestyle="dashed", label="Ende vom Liedausschnitt"
 )
@@ -118,20 +116,24 @@ def _prepare_plot(title, draw_boxes=False, noise=False):
     if noise is not False:
         _draw_noise(noise)
 
-    plt.xlabel("Zeit in s")
-    plt.ylabel("Normierte Skala")
-    plt.title(title)
+    plt.xlabel("Zeit [sec]", weight="bold")
+    plt.ylabel("normiertes Rauschen [a.u.]\n Bewertungen [a.u.]", weight="bold")
+    plt.title(title, weight="bold")
 
     plt.vlines(END_OF_SONG, 0, 1, colors="k", linestyles="dashed")
 
 
 def create_mean_timeline_plot(
-    reordered_timeline_df, output_filename="", noise=False, draw_signal_boxes=False, path = "data/plots/mean/"
+    reordered_timeline_df,
+    output_filename="",
+    noise=False,
+    title="Mittelwert",
+    draw_signal_boxes=False,
+    path="data/plots/mean/",
 ):
     """
     Create plots for mean and median. But work is in progress
     """
-    
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -145,7 +147,7 @@ def create_mean_timeline_plot(
 
     legend_labels.append(mean_rating)
 
-    _prepare_plot("Mittelwert", draw_signal_boxes, noise)
+    _prepare_plot(title, draw_signal_boxes, noise)
 
     sns.scatterplot(
         x="created_at_relative",
@@ -169,8 +171,9 @@ def create_and_compare_mean_timeline_plots(
     timeline_df_without,
     output_filename="",
     noise=False,
+    title="Mittelwert Vergleich",
     draw_signal_boxes=False,
-    path = "data/plots/mean/"
+    path="data/plots/mean/",
 ):
     """
     Create plots for mean and median. But work is in progress
@@ -189,22 +192,22 @@ def create_and_compare_mean_timeline_plots(
     legend_labels.append(mean_rating_with)
     legend_labels.append(mean_rating_without)
 
-    _prepare_plot("Mittelwert Vergleich", draw_signal_boxes, noise)
+    _prepare_plot(title, draw_signal_boxes, noise)
 
     sns.scatterplot(
         x="created_at_relative",
         y="mean",
         data=timeline_df_with,
-        edgecolor=COLOR_GREEN,
-        color=COLOR_GREEN,
+        edgecolor=COLOR_YELLOW,
+        color=COLOR_YELLOW,
         alpha=0.5,
     )
     sns.scatterplot(
         x="created_at_relative",
         y="mean",
         data=timeline_df_without,
-        edgecolor=COLOR_YELLOW,
-        color=COLOR_YELLOW,
+        edgecolor=COLOR_GREEN,
+        color=COLOR_GREEN,
         alpha=0.5,
     )
 
@@ -216,39 +219,61 @@ def create_and_compare_mean_timeline_plots(
     plt.close("all")
 
 
+def prepare_hysteresis_plot(y_label, title):
+    fig = plt.figure(figsize=(13, 10))
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+
+    plt.xlim((0, 1))
+    plt.ylim((0, 1))
+    plt.xlabel("Normiertes Rauschen [a.u.]", weight="bold")
+    plt.ylabel(y_label, weight="bold")
+    plt.xticks(np.arange(0, 1.1, step=0.1))
+    plt.setp(ax.get_xticklabels()[1::2], visible=False)
+    plt.yticks(np.arange(0, 1.1, step=0.1))
+    plt.setp(ax.get_yticklabels()[1::2], visible=False)
+    plt.title(title, weight="bold")
+
+
 def create_hysteresis_plot(
-    mean_values, noise_values, noise_type, output_filename="", center_is_max=True, path="data/plots/hysteresis/"
+    mean_values,
+    noise_values,
+    title,
+    y_label,
+    output_filename="",
+    center_is_max=True,
+    path="data/plots/hysteresis/",
 ):
     if len(noise_values) < 1:
         print("noise list is to small!")
-        return 
-    
-    # find max or min noise value 
+        return
+
+    # find max or min noise value
     if center_is_max:
         index_of_first_extrema = noise_values.idxmax()
     else:
         index_of_first_extrema = noise_values[noise_values == 0].last_valid_index()
         if index_of_first_extrema == None:
             index_of_first_extrema = noise_values.idxmin()
-    
-    # get all maxima/minima and then select the central index. 
+
+    # get all maxima/minima and then select the central index.
     # This is the central turning point of noise changes
-    central_extrema = noise_values.loc[noise_values == noise_values[index_of_first_extrema]].index
+    central_extrema = noise_values.loc[
+        noise_values == noise_values[index_of_first_extrema]
+    ].index
     # print(len(central_extrema))
     if len(central_extrema) == 1:
         index_of_center = central_extrema[0]
     else:
-        index_of_center = central_extrema[:int(len(central_extrema)/2)][0]
-    
-    if center_is_max:
-        direction = ["up"] * index_of_center
-        direction = direction + ["down"] * (len(noise_values) - index_of_center)
-        color_palette=[COLOR_YELLOW, COLOR_GREEN]
-    else:
-        direction = ["down"] * index_of_center
-        direction = direction + ["up"] * (len(noise_values) - index_of_center)
-        color_palette=[COLOR_GREEN, COLOR_YELLOW]
-    
+        index_of_center = central_extrema[: int(len(central_extrema) / 2)][0]
+
+    # if center_is_max:
+    direction = ["up"] * index_of_center
+    direction = direction + ["down"] * (len(noise_values) - index_of_center)
+    color_palette = [COLOR_GREEN, COLOR_YELLOW]
+    # else:
+    #     direction = ["down"] * index_of_center
+    #     direction = direction + ["up"] * (len(noise_values) - index_of_center)
+    #     color_palette = [COLOR_GREEN, COLOR_YELLOW]
 
     hysterese = pd.DataFrame(
         {
@@ -258,22 +283,7 @@ def create_hysteresis_plot(
         }
     )
 
-    fig = plt.figure(figsize=(13, 10))
-    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-
-    
-    plt.xlim((0,1))
-    plt.ylim((0,1))
-    plt.xlabel("Normierte Skala [Rauschen]")
-    plt.ylabel("Normierte Skala [Nutzerwertung]")
-    plt.xticks(np.arange(0, 1.1, step=0.1))
-    plt.setp(ax.get_xticklabels()[1::2], visible=False)
-    plt.yticks(np.arange(0, 1.1, step=0.1))
-    plt.setp(ax.get_yticklabels()[1::2], visible=False)
-    plt.title(
-        "Vergleich der empfundenen gegenüber der tatsächlichen Rauschkurve. \n Rauschkurve: "
-        + noise_type
-    )
+    prepare_hysteresis_plot(y_label, title)
 
     sns.scatterplot(
         x="noise",
@@ -295,7 +305,7 @@ def create_hysteresis_plot(
         markerfacecolor=COLOR_GREEN,
         markeredgecolor=COLOR_GREEN,
         linestyle="",
-        label="Maximum nach Minimum",
+        label="Hinweg",
     )
     legend_dir_2 = Line2D(
         [0],
@@ -305,9 +315,9 @@ def create_hysteresis_plot(
         markerfacecolor=COLOR_YELLOW,
         markeredgecolor=COLOR_YELLOW,
         linestyle="",
-        label="Minimum nach Maximum",
+        label="Rückweg",
     )
-    
+
     start = Line2D(
         [0],
         [0],
@@ -342,7 +352,13 @@ def create_hysteresis_plot(
 
 
 def create_hysteresis_plot_compare(
-    mean_values_without, mean_values_with, noise_values, noise_type,start_at_zero, output_filename="", path = "data/plots/hysteresis/"
+    mean_values_without,
+    mean_values_with,
+    noise_values,
+    title,
+    start_at_zero,
+    output_filename="",
+    path="data/plots/hysteresis/",
 ):
     noise = pd.concat([noise_values, noise_values])
 
@@ -359,21 +375,7 @@ def create_hysteresis_plot_compare(
         }
     )
 
-    fig = plt.figure(figsize=(13, 10))
-    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-
-    plt.xlim((0,1))
-    plt.ylim((0,1))
-    plt.xlabel("Normierte Skala [Rauschen]")
-    plt.ylabel("Normierte Skala [Nutzerwertung]")
-    plt.xticks(np.arange(0, 1.1, step=0.1))
-    plt.setp(ax.get_xticklabels()[1::2], visible=False)
-    plt.yticks(np.arange(0, 1.1, step=0.1))
-    plt.setp(ax.get_yticklabels()[1::2], visible=False)
-    plt.title(
-        "Vergleich der empfundenen gegenüber der tatsächlichen Rauschkurve \n Rauschkurve: "
-        + noise_type
-    )
+    prepare_hysteresis_plot("Mittelwerte der Bewertungen [u.a.]", title)
 
     sns.scatterplot(
         x="noise",

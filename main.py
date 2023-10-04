@@ -145,6 +145,51 @@ titles = [
     "Versuch: aus- und einschleichendes Rauschen ohne Aufforderung, ID: ",
 ]
 
+hystersis_title_single = [
+    "Bewertungseingaben mit Aufforderung, \n aufgetragen gegenüber einer normierten aus-einschleichenden Rauschkurve.",
+    "Bewertungseingaben mit Aufforderung, \n aufgetragen gegenüber einer normierten ein-ausschleichenden Rauschkurve.",
+    "Bewertungseingaben ohne Aufforderung, \n aufgetragen gengegenüber einer normierten ein-ausschleichenden Rauschkurve.",
+    "Bewertungseingaben ohne Aufforderung, \n aufgetragen gegenüber einer normierten aus-einschleichenden Rauschkurve.",
+]
+
+hystersis_title_mean = [
+    "Gemittelte Bewertungseingaben mit Aufforderung, \n aufgetragen gegenüber einer normierten aus-einschleichenden Rauschkurve.",
+    "Gemittelte Bewertungseingaben mit Aufforderung, \n aufgetragen gegenüber einer normierten ein-ausschleichenden Rauschkurve.",
+    "Gemittelte Bewertungseingaben ohne Aufforderung, \n aufgetragen gegenüber einer normierten ein-ausschleichenden Rauschkurve.",
+    "Gemittelte Bewertungseingaben ohne Aufforderung, \n aufgetragen gegenüber einer normierten aus-einschleichenden Rauschkurve.",
+]
+
+hystersis_title_compare = [
+    "Vergleich zweier gemittelter Bewertungseingaben, \n aufgetragen gegenüber einer ein-ausschleichenden Rauschkurve",
+    "Vergleich zweier gemittelter Bewertungseingaben, \n aufgetragen gegenüber einer aus-einschleichenden Rauschkurve",
+]
+
+mean_titles = [
+    "Gemittelte Bewertungseingaben der aus-einschleichenden Rauschkurve mit Aufforderung",
+    "Gemittelte Bewertungseingaben der ein-ausschleichenden Rauschkurve mit Aufforderung",
+    "Gemittelte Bewertungseingaben der ein-ausschleichenden Rauschkurve ohne Aufforderung",
+    "Gemittelte Bewertungseingaben der aus-einschleichenden Rauschkurve ohne Aufforderung",
+]
+
+mean_titles_cutted = [
+    "Gemittelte und auf 68 Sekunden beschränkte \nBewertungseingaben der aus-einschleichenden Rauschkurve mit Aufforderung",
+    "Gemittelte und auf 68 Sekunden beschränkte \nBewertungseingaben der ein-ausschleichenden Rauschkurve mit Aufforderung",
+    "Gemittelte und auf 68 Sekunden beschränkte \nBewertungseingaben der ein-ausschleichenden Rauschkurve ohne Aufforderung",
+    "Gemittelte und auf 68 Sekunden beschränkte \nBewertungseingaben der aus-einschleichenden Rauschkurve ohne Aufforderung",
+]
+
+mean_titles_diff = [
+    "Differenz zwischen den gemittelte Bewertungseingaben \nund der aus-einschleichenden Rauschkurve mit Aufforderung",
+    "Differenz zwischen den gmittelte Bewertungseingaben \nund der ein-ausschleichenden Rauschkurve mit Aufforderung",
+    "Differenz zwischen den gemittelte Bewertungseingaben \nund der ein-ausschleichenden Rauschkurve ohne Aufforderung",
+    "Differenz zwischen den gemittelte Bewertungseingaben \nund der aus-einschleichenden Rauschkurve ohne Aufforderung",
+]
+
+mean_title_compare = [
+    "Vergleich zweier gemittelter Bewertungseingaben der ein-ausschleichenden Rauschkurve",
+    "Vergleich zweier gemittelter Bewertungseingaben der aus-einschleichenden Rauschkurve",
+]
+
 
 def get_and_plot_timeline_data(
     filename, delimiter, title, draw_signal_boxes, draw_noise, do_extra=False
@@ -241,20 +286,25 @@ def filter_timeline_data_for_blur_and_focus(filename):
         filename,
     )
 
-def plot_all_single_hysteresis(noise, resampled_data = False):
+
+def plot_all_single_hysteresis(noise, resampled_data=False):
     center_is_max = [False, True, True, False]
-    outputNames =["hysteris_aus_einschleichend_mit_aufforderung", "hysteris_ein_ausschleichend_mit_aufforderung"
-, "hysteris_ein_ausschleichend_ohne_aufforderung", "hysteris_aus_einschleichend_ohne_aufforderung"]
-    
+    outputNames = [
+        "hysteris_aus_einschleichend_mit_aufforderung",
+        "hysteris_ein_ausschleichend_mit_aufforderung",
+        "hysteris_ein_ausschleichend_ohne_aufforderung",
+        "hysteris_aus_einschleichend_ohne_aufforderung",
+    ]
+
     for i, fileName in enumerate(fileNames):
         if resampled_data:
             fileName = fileName + version_1_7_ending
 
         refactored_data_df = pd.read_csv(
-            "data/refactored/"+fileName +".csv",
+            "data/refactored/" + fileName + ".csv",
             delimiter=";",
             encoding="utf-8",
-            decimal=","
+            decimal=",",
         )
 
         # drop unnecessary columns and set time as index
@@ -263,22 +313,26 @@ def plot_all_single_hysteresis(noise, resampled_data = False):
         refactored_data_df.drop(columns="stdev", inplace=True)
         refactored_data_df = refactored_data_df.set_index("created_at_relative")
         # drop all rows after the time of 68 (official end of song)
-        refactored_data_df= refactored_data_df[refactored_data_df.index < 68] 
-        
+        refactored_data_df = refactored_data_df[refactored_data_df.index < 68]
+
         # get the three largest series
         # ordered_timeline_series = test_df.count().sort_values().tail(3)
         # test_df = test_df.filter(items=ordered_timeline_series.index)
 
-        for serie in refactored_data_df:
+        for soci_id in refactored_data_df:
             # create new dictionary for selected values
-            filtered_noise = {"created_at_relative":[], "noise":[], "rating":[]}
+            filtered_noise = {"created_at_relative": [], "noise": [], "rating": []}
             # drop all empty rows
-            filtered_origin_series = refactored_data_df[serie].dropna()
+            filtered_origin_series = refactored_data_df[soci_id].dropna()
 
             for timestamp in filtered_origin_series.index:
                 # get the noise value which is timley the nearest neighbour to current timestamp
-                df_sorted = noise[i].iloc[(noise[i]['t']-timestamp).abs().argsort()[:1]]["db"].values[0]
-                
+                df_sorted = (
+                    noise[i]
+                    .iloc[(noise[i]["t"] - timestamp).abs().argsort()[:1]]["db"]
+                    .values[0]
+                )
+
                 # add all values to dictionary
                 filtered_noise["created_at_relative"].append(timestamp)
                 filtered_noise["noise"].append(df_sorted)
@@ -288,47 +342,51 @@ def plot_all_single_hysteresis(noise, resampled_data = False):
             df_sort = pd.DataFrame(data=filtered_noise, dtype="float32")
 
             # plot hysteresis
-            sd.create_hysteresis_plot(df_sort['rating'], 
-                                      df_sort['noise'],   
-                                      noise_type=titles[i]+str(serie),
-                                      output_filename=outputNames[i]+"_"+str(serie),
-                                      center_is_max=center_is_max[i],
-                                      path="data/plots/hysteresis_single/" + outputNames[i]+"/"
-                                     )
+            sd.create_hysteresis_plot(
+                df_sort["rating"],
+                df_sort["noise"],
+                title=hystersis_title_single[i] + " ID: " + str(soci_id),
+                y_label="Bewertungseingaben [a.u.]",
+                output_filename=outputNames[i] + "_" + str(soci_id),
+                center_is_max=center_is_max[i],
+                path="data/plots/hysteresis_single/" + outputNames[i] + "/",
+            )
 
 
 def plot_all_mean_hysteresis(reorderd_timeline_data_cutted, filtered=False):
     if filtered:
-        path="data/plots/hysteresis_filtered/"
+        path = "data/plots/hysteresis_filtered/"
     else:
-        path="data/plots/hysteresis/"
+        path = "data/plots/hysteresis/"
     # hysteresis plot
     sd.create_hysteresis_plot(
         reorderd_timeline_data_cutted[1]["mean"],
         noise_1["db"],
-        noise_type="Ein-Ausschleichend mit Aufforderung",
+        title=hystersis_title_mean[1],
+        y_label="Mittelwert der Bewertungseingaben [a.u.]",
         output_filename="hysteris_ein_ausschleichend_mit_aufforderung",
         center_is_max=True,
-        path=path
+        path=path,
     )
 
     sd.create_hysteresis_plot(
         reorderd_timeline_data_cutted[2]["mean"],
         noise_1["db"],
-        noise_type="Ein-Ausschleichend ohne Aufforderung",
+        title=hystersis_title_mean[2],
+        y_label="Mittelwert der Bewertungseingaben [a.u.]",
         output_filename="hysteris_ein_ausschleichend_ohne_aufforderung",
         center_is_max=True,
-        path=path
+        path=path,
     )
 
     sd.create_hysteresis_plot_compare(
         reorderd_timeline_data_cutted[1]["mean"],
         reorderd_timeline_data_cutted[2]["mean"],
         noise_1["db"],
-        noise_type="Ein-Ausschleichend",
+        title=hystersis_title_compare[0],
         start_at_zero=True,
         output_filename="vergleich_hysterese_ein_ausschleichend",
-        path=path
+        path=path,
     )
 
     # get first max and drop all values before that
@@ -342,10 +400,11 @@ def plot_all_mean_hysteresis(reorderd_timeline_data_cutted, filtered=False):
     sd.create_hysteresis_plot(
         filtered_mean_values_1["mean"],
         filtered_noise["db"],
-        noise_type="Aus-Einschleichend mit Aufforderung",
+        title=hystersis_title_mean[0],
+        y_label="Mittelwert der Bewertungseingaben [a.u.]",
         output_filename="hysteris_aus_einschleichend_mit_aufforderung",
         center_is_max=False,
-        path=path
+        path=path,
     )
 
     filtered_mean_values_2 = reorderd_timeline_data_cutted[3].drop(
@@ -355,36 +414,26 @@ def plot_all_mean_hysteresis(reorderd_timeline_data_cutted, filtered=False):
     sd.create_hysteresis_plot(
         filtered_mean_values_2["mean"],
         filtered_noise["db"],
-        noise_type="Aus-Einschleichend ohne Aufforderung",
+        title=hystersis_title_mean[3],
+        y_label="Mittelwert der Bewertungseingaben [a.u.]",
         output_filename="hysteris_aus_einschleichend_ohne_aufforderung",
         center_is_max=False,
-        path=path
+        path=path,
     )
 
     sd.create_hysteresis_plot_compare(
         filtered_mean_values_2["mean"],
         filtered_mean_values_1["mean"],
         filtered_noise["db"],
-        noise_type="Aus-Einschleichend",
-        start_at_zero = False,
+        title=hystersis_title_compare[1],
+        start_at_zero=False,
         output_filename="vergleich_hysterese_aus_einschleichend",
-        path=path
+        path=path,
     )
 
-def calc_and_plot_mean_values(filtered = False):
-    bad_ids =[447,
-            453,
-            487,
-            487,
-            490,
-            552,
-            584,
-            611,
-            664,
-            688,
-            700,
-            701
-    ]
+
+def calc_and_plot_mean_values(filtered=False):
+    bad_ids = [447, 453, 487, 487, 490, 552, 584, 611, 664, 688, 700, 701]
 
     # mean time line plot
     reorderd_timeline_data = []
@@ -412,9 +461,10 @@ def calc_and_plot_mean_values(filtered = False):
         sd.create_mean_timeline_plot(
             reordered_timeline,
             output_filename=fileName + version_1_7_ending,
+            title=mean_titles[i],
             noise=noise[i],
             draw_signal_boxes=symbol_used[i],
-            path=path
+            path=path,
         )
 
         # drop all values after 68 seconds
@@ -425,40 +475,44 @@ def calc_and_plot_mean_values(filtered = False):
         # create plot and save it of cutted data
         sd.create_mean_timeline_plot(
             cutted,
-            fileName + "_cutted",
+            output_filename=fileName + version_1_7_ending + "_cutted",
+            title=mean_titles_cutted[i],
             noise=noise[i],
             draw_signal_boxes=symbol_used[i],
-            path=path
+            path=path,
         )
-        
+
         # add both list to new list for return
         reorderd_timeline_data.append(reordered_timeline)
         reorderd_timeline_data_cutted.append(cutted)
 
-    return  [reorderd_timeline_data, reorderd_timeline_data_cutted]
+    return [reorderd_timeline_data, reorderd_timeline_data_cutted]
+
 
 def create_extra_mean_plots(reorderd_timeline_data_cutted, filtered=False):
     if filtered:
-        path="data/plots/mean_filtered/"
+        path = "data/plots/mean_filtered/"
     else:
-        path="data/plots/mean/"
+        path = "data/plots/mean/"
 
     # create comparison plot
     sd.create_and_compare_mean_timeline_plots(
         reorderd_timeline_data_cutted[0],
         reorderd_timeline_data_cutted[3],
         output_filename="vergleich_aus_einschleichend_mittelwerte",
+        title=mean_title_compare[1],
         noise=noise_2,
         draw_signal_boxes=False,
-        path=path
+        path=path,
     )
     sd.create_and_compare_mean_timeline_plots(
         reorderd_timeline_data_cutted[1],
         reorderd_timeline_data_cutted[2],
         output_filename="vergleich_ein_ausschleichend_mittelwerte",
+        title=mean_title_compare[0],
         noise=noise_1,
         draw_signal_boxes=False,
-        path=path
+        path=path,
     )
 
     # calc difference between mean rating and real noise values
@@ -473,9 +527,10 @@ def create_extra_mean_plots(reorderd_timeline_data_cutted, filtered=False):
     sd.create_mean_timeline_plot(
         mean_noise_diff,
         output_filename="differenz_rauschen_mittelwerte_aus_einschleichend",
+        title=mean_titles_diff[0],
         noise=noise_2,
         draw_signal_boxes=False,
-        path=path
+        path=path,
     )
 
     mean_noise_diff = pd.DataFrame(
@@ -488,14 +543,22 @@ def create_extra_mean_plots(reorderd_timeline_data_cutted, filtered=False):
     sd.create_mean_timeline_plot(
         mean_noise_diff,
         output_filename="differenz_rauschen_mittelwerte_ein_ausschleichend",
+        title=mean_titles_diff[1],
         noise=noise_1,
         draw_signal_boxes=False,
-        path=path
+        path=path,
     )
+
 
 def test_plots():
     ###### TEST
-    timeline_origin_df = pr.read_and_merge_timeline_data("test_timeline_data", "test_session_metadata", delimiter="\t", needed_ids=needed_ids, output_filename="filtered_testoutput_origin")
+    timeline_origin_df = pr.read_and_merge_timeline_data(
+        "test_timeline_data",
+        "test_session_metadata",
+        delimiter="\t",
+        needed_ids=needed_ids,
+        output_filename="filtered_testoutput_origin",
+    )
     # timeline_resampled_df = pr.read_and_merge_timeline_data(
     #     "test_resampled_timeline_data",
     #     "test_resampled_session_metadata",
@@ -571,6 +634,7 @@ def test_plots():
     # pr.read_noise_values("noise_1_8000mhz")
     # pr.read_noise_values("noise_2_8000mhz")
 
+
 if __name__ == "__main__":
     PATH = "data/origin/"
     if not os.path.exists(PATH):
@@ -586,14 +650,16 @@ if __name__ == "__main__":
     noise = [noise_2, noise_1, noise_1, noise_2]
     filter_means = False
 
-    reordered_timeline_data, reordered_timeline_data_cutted = calc_and_plot_mean_values(filtered=filter_means)
-    
-    # create_extra_mean_plots(reordered_timeline_data_cutted, filtered=filter_means)
-    
-    # plot_all_single_hysteresis(noise)
-    
+    reordered_timeline_data, reordered_timeline_data_cutted = calc_and_plot_mean_values(
+        filtered=filter_means
+    )
+
+    create_extra_mean_plots(reordered_timeline_data_cutted, filtered=filter_means)
+
+    plot_all_single_hysteresis(noise)
+
     plot_all_mean_hysteresis(reordered_timeline_data_cutted, filtered=filter_means)
-            
+
     # for i, fileName in enumerate(fileNames):
     #     filter_timeline_data_for_blur_and_focus(fileName)
     #     # you can outcomment the operations with #
@@ -618,7 +684,7 @@ if __name__ == "__main__":
     #         do_extra=True,
     #     )
 
-    #     #  plot both original and resampled data in one image
+    #     #     #  plot both original and resampled data in one image
     #     get_and_plot_multiple_timeline_data(
     #         filename_origin=fileNames[i],
     #         filename_resampled=fileNames[i] + version_1_7_ending,
@@ -628,4 +694,3 @@ if __name__ == "__main__":
     #         draw_signal_boxes=symbol_used[i],
     #         draw_noise=noise[i],
     #     )
-
